@@ -34,3 +34,21 @@ def crear_plan_de_pagos(sender, instance, created, **kwargs):
             print("   --> Plan de pagos creado exitosamente.")
     else:
         print("   -> La póliza es una ACTUALIZACIÓN (created=False). No se hace nada.")
+
+
+
+@receiver(post_save, sender=Poliza)
+def actualizar_recordatorio_soat(sender, instance, **kwargs):
+    """
+    Si se guarda una póliza de tipo SOAT que está vinculada a un vehículo,
+    actualiza la fecha del recordatorio en el modelo Vehiculo.
+    """
+    # Verificamos si la póliza tiene un tipo de seguro y un vehículo asignado
+    if instance.tipo_seguro and instance.vehiculo:
+        # Comparamos el nombre en minúsculas para ser flexibles (SOAT, Soat, soat)
+        if 'soat' in instance.tipo_seguro.nombre.lower():
+            vehiculo = instance.vehiculo
+            # Actualizamos el recordatorio con la fecha de fin de la póliza
+            vehiculo.soat_vencimiento_recordatorio = instance.fecha_fin
+            vehiculo.save()
+            print(f"--- Recordatorio de SOAT actualizado para el vehículo {vehiculo.placa} a la fecha {instance.fecha_fin} ---")

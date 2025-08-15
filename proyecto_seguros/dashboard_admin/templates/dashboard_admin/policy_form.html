@@ -8,16 +8,12 @@
         <form method="post" enctype="multipart/form-data" novalidate>
             {% csrf_token %}
 
-            {# 👇 MOSTRAR ERRORES GENERALES DEL FORMULARIO (NO LIGADOS A UN CAMPO) 👇 #}
             {% if form.non_field_errors %}
                 <div class="alert alert-danger">
-                    {% for error in form.non_field_errors %}
-                        {{ error }}
-                    {% endfor %}
+                    {% for error in form.non_field_errors %}{{ error }}{% endfor %}
                 </div>
             {% endif %}
 
-            {# Renderizado manual de campos con sus errores específicos #}
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="{{ form.numero_poliza.id_for_label }}" class="form-label">Número de Póliza</label>
@@ -37,7 +33,17 @@
                     {{ form.tipo_seguro }}
                     {% if form.tipo_seguro.errors %}<div class="text-danger small mt-1">{{ form.tipo_seguro.errors|striptags }}</div>{% endif %}
                 </div>
-                 <div class="col-md-6 mb-3">
+                
+                <div class="col-md-6 mb-3" id="vehiculo-container" style="display: none;">
+                    <label for="{{ form.vehiculo.id_for_label }}" class="form-label">Vehículo (Placa)</label>
+                    {{ form.vehiculo }}
+                    <div class="form-text">Selecciona el vehículo asociado a esta póliza.</div>
+                    {% if form.vehiculo.errors %}<div class="text-danger small mt-1">{{ form.vehiculo.errors|striptags }}</div>{% endif %}
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
                     <label for="{{ form.prima_total.id_for_label }}" class="form-label">Valor Prima Total</label>
                     {{ form.prima_total }}
                     {% if form.prima_total.errors %}<div class="text-danger small mt-1">{{ form.prima_total.errors|striptags }}</div>{% endif %}
@@ -46,7 +52,7 @@
 
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="{{ form.fecha_inicio.id_for_label }}" class="form-label">Fecha de Inicio</glabel>
+                    <label for="{{ form.fecha_inicio.id_for_label }}" class="form-label">Fecha de Inicio</label>
                     {{ form.fecha_inicio }}
                     {% if form.fecha_inicio.errors %}<div class="text-danger small mt-1">{{ form.fecha_inicio.errors|striptags }}</div>{% endif %}
                 </div>
@@ -78,7 +84,6 @@
                 </div>
             </div>
 
-
             <div class="mt-4 text-end">
                 <a href="{% url 'dashboard_admin:lista_polizas_cliente' pk=cliente.pk %}" class="btn btn-secondary">Cancelar</a>
                 <button type="submit" class="btn btn-primary-assecol">Guardar Póliza</button>
@@ -87,22 +92,42 @@
     </div>
 </div>
 
-{# El script de JavaScript para el campo condicional no cambia #}
+{# 👇 SCRIPT ACTUALIZADO CON LA LÓGICA PARA AMBOS CAMPOS CONDICIONALES 👇 #}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const modoPagoSelect = document.getElementById('id_modo_pago');
-        const plazoContainer = document.getElementById('plazo-meses-container');
+document.addEventListener('DOMContentLoaded', function() {
+    // --- Lógica para el Plazo en Meses ---
+    const modoPagoSelect = document.getElementById('{{ form.modo_pago.id_for_label }}');
+    const plazoContainer = document.getElementById('plazo-meses-container');
 
-        function togglePlazoVisibility() {
-            const selectedValue = modoPagoSelect.value;
-            if (selectedValue === 'CREDITO' || selectedValue === 'MENSUAL') {
-                plazoContainer.style.display = 'block';
-            } else {
-                plazoContainer.style.display = 'none';
-            }
+    function togglePlazoVisibility() {
+        const selectedValue = modoPagoSelect.value;
+        if (selectedValue === 'CREDITO' || selectedValue === 'MENSUAL') {
+            plazoContainer.style.display = 'block';
+        } else {
+            plazoContainer.style.display = 'none';
         }
-        togglePlazoVisibility();
-        modoPagoSelect.addEventListener('change', togglePlazoVisibility);
-    });
+    }
+    togglePlazoVisibility();
+    modoPagoSelect.addEventListener('change', togglePlazoVisibility);
+
+    // --- Lógica para el campo Vehículo ---
+    const tipoSeguroSelect = document.getElementById('{{ form.tipo_seguro.id_for_label }}');
+    const vehiculoContainer = document.getElementById('vehiculo-container');
+    const vehiculoKeywords = ['vehículo', 'auto', 'soat', 'carro', 'moto'];
+
+    function toggleVehiculoVisibility() {
+        if (!tipoSeguroSelect.options[tipoSeguroSelect.selectedIndex]) return;
+        const selectedOptionText = tipoSeguroSelect.options[tipoSeguroSelect.selectedIndex].text.toLowerCase();
+        const isVehiculoPolicy = vehiculoKeywords.some(keyword => selectedOptionText.includes(keyword));
+        
+        if (isVehiculoPolicy) {
+            vehiculoContainer.style.display = 'block';
+        } else {
+            vehiculoContainer.style.display = 'none';
+        }
+    }
+    toggleVehiculoVisibility();
+    tipoSeguroSelect.addEventListener('change', toggleVehiculoVisibility);
+});
 </script>
 {% endblock %}

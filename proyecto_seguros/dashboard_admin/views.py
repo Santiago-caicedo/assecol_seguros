@@ -202,6 +202,14 @@ class PolicyCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         print(form.errors.as_json())
         print("---------------------------------------")
         return super().form_invalid(form)
+    
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        cliente = User.objects.get(pk=self.kwargs['pk'])
+        # Filtramos el campo 'vehiculo' para mostrar solo los de este cliente
+        form.fields['vehiculo'].queryset = Vehiculo.objects.filter(cliente=cliente)
+        return form
 
 
 class PolicyUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
@@ -233,6 +241,14 @@ class PolicyUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         # El objeto self.object es la póliza que se acaba de guardar
         cliente_pk = self.object.cliente.pk
         return reverse_lazy('dashboard_admin:lista_polizas_cliente', kwargs={'pk': cliente_pk})
+    
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # En UpdateView, el cliente se obtiene de la póliza misma
+        cliente = self.object.cliente
+        form.fields['vehiculo'].queryset = Vehiculo.objects.filter(cliente=cliente)
+        return form
     
 
 
