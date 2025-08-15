@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Mi Dashboard - Assecol Seguros{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    
+    {# Encabezado de Bienvenida #}
+    <div class="welcome-banner">
+        <h1 class="display-5">Bienvenido, <strong>{{ cliente.get_full_name|default:cliente.username }}</strong></h1>
+        <p class="lead">Revisa el estado de tus seguros y pólizas.</p>
+    </div>
+
+    {# Fila de Tarjetas de Estadísticas #}
+    <div class="row mb-5">
+        <div class="col-lg-6 mb-4">
+            <div class="stat-card-client">
+                <div class="icon"><i class="fas fa-shield-alt"></i></div>
+                <div class="stat-info">
+                    <h1>{{ polizas_activas_count }}</h1>
+                    <p>Pólizas Activas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 mb-4">
+             <div class="stat-card-client">
+                <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="stat-info">
+                    <h1>{{ polizas_por_vencer_count }}</h1>
+                    <p>Pólizas por Vencer (Próximos 60 días)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Título de la sección de pólizas #}
+    <h3 class="mb-4" style="font-weight: 700; color: var(--assecol-blue);">Detalle de tus Pólizas</h3>
+
+    {# Lista de Pólizas (el diseño que ya teníamos) #}
+    <div class="row">
+        {% for poliza in cliente.polizas.all %}
+        <div class="col-lg-6 mb-4">
+            <div class="card policy-card h-100">
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="policy-icon me-3">
+                                <i class="fas fa-file-contract fa-2x"></i>
+                            </div>
+                            <div>
+                                <h5 class="card-title mb-0">{{ poliza.tipo_seguro.nombre }}</h5>
+                                <p class="card-text text-muted small">Póliza #{{ poliza.numero_poliza }}</p>
+                            </div>
+                        </div>
+                        
+                        {% if poliza.esta_vencida %}
+                            <span class="status-badge status-expired">Vencida</span>
+                        {% else %}
+                            <span class="status-badge status-active">Activa</span>
+                        {% endif %}
+                    </div>
+                    <hr>
+                    <div class="row text-center my-3">
+                        <div class="col">
+                            <p class="text-secondary mb-1 small text-uppercase">Inicio Vigencia</p>
+                            <strong class="d-block">{{ poliza.fecha_inicio|date:"d M, Y" }}</strong>
+                        </div>
+                        <div class="col">
+                            <p class="text-secondary mb-1 small text-uppercase">Fin Vigencia</p>
+                            <strong class="d-block">{{ poliza.fecha_fin|date:"d M, Y" }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto text-center pt-3">
+                        {% if poliza.poliza_pdf %}
+                             <a href="{{ poliza.poliza_pdf.url }}" class="btn btn-primary-assecol" target="_blank">
+                                <i class="fas fa-download"></i> Descargar Póliza
+                             </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+            <div class="col">
+                <div class="alert alert-info">Aún no tienes pólizas registradas.</div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

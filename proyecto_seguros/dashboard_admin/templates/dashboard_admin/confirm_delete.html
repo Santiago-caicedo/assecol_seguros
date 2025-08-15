@@ -1,0 +1,20 @@
+{% extends "dashboard_admin/dashboard_base.html" %}
+
+{% block dashboard_content %}
+<h1 class="h2 mb-4">Confirmar Eliminación</h1>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-4">
+        <p>¿Estás seguro de que quieres eliminar el objeto: <strong>{{ object }}</strong>?</p>
+        <p class="text-danger">Esta acción no se puede deshacer.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="text-end">
+                <a href="{{ request.META.HTTP_REFERER|escape }}" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-danger">Sí, Eliminar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends "dashboard_admin/dashboard_base.html" %}
+
+{% block dashboard_content %}
+<h1 class="h2 mb-4">{{ titulo|default:"Nueva Póliza" }} para {{ cliente.get_full_name }}</h1>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-4">
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            {# 👇 MOSTRAR ERRORES GENERALES DEL FORMULARIO (NO LIGADOS A UN CAMPO) 👇 #}
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {# Renderizado manual de campos con sus errores específicos #}
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.numero_poliza.id_for_label }}" class="form-label">Número de Póliza</label>
+                    {{ form.numero_poliza }}
+                    {% if form.numero_poliza.errors %}<div class="text-danger small mt-1">{{ form.numero_poliza.errors|striptags }}</div>{% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.compania_aseguradora.id_for_label }}" class="form-label">Compañía Aseguradora</label>
+                    {{ form.compania_aseguradora }}
+                    {% if form.compania_aseguradora.errors %}<div class="text-danger small mt-1">{{ form.compania_aseguradora.errors|striptags }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.tipo_seguro.id_for_label }}" class="form-label">Tipo de Seguro</label>
+                    {{ form.tipo_seguro }}
+                    {% if form.tipo_seguro.errors %}<div class="text-danger small mt-1">{{ form.tipo_seguro.errors|striptags }}</div>{% endif %}
+                </div>
+                 <div class="col-md-6 mb-3">
+                    <label for="{{ form.prima_total.id_for_label }}" class="form-label">Valor Prima Total</label>
+                    {{ form.prima_total }}
+                    {% if form.prima_total.errors %}<div class="text-danger small mt-1">{{ form.prima_total.errors|striptags }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.fecha_inicio.id_for_label }}" class="form-label">Fecha de Inicio</glabel>
+                    {{ form.fecha_inicio }}
+                    {% if form.fecha_inicio.errors %}<div class="text-danger small mt-1">{{ form.fecha_inicio.errors|striptags }}</div>{% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.fecha_fin.id_for_label }}" class="form-label">Fecha de Fin</label>
+                    {{ form.fecha_fin }}
+                    {% if form.fecha_fin.errors %}<div class="text-danger small mt-1">{{ form.fecha_fin.errors|striptags }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.poliza_pdf.id_for_label }}" class="form-label">Documento de la Póliza (PDF)</label>
+                {{ form.poliza_pdf }}
+                {% if form.poliza_pdf.errors %}<div class="text-danger small mt-1">{{ form.poliza_pdf.errors|striptags }}</div>{% endif %}
+            </div>
+
+            <hr class="my-4">
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.modo_pago.id_for_label }}" class="form-label">Modalidad de Pago</label>
+                    {{ form.modo_pago }}
+                    {% if form.modo_pago.errors %}<div class="text-danger small mt-1">{{ form.modo_pago.errors|striptags }}</div>{% endif %}
+                </div>
+                <div class="col-md-6 mb-3" id="plazo-meses-container" style="display: none;">
+                    <label for="{{ form.plazo_meses.id_for_label }}" class="form-label">Plazo en Meses</label>
+                    {{ form.plazo_meses }}
+                    {% if form.plazo_meses.errors %}<div class="text-danger small mt-1">{{ form.plazo_meses.errors|striptags }}</div>{% endif %}
+                </div>
+            </div>
+
+
+            <div class="mt-4 text-end">
+                <a href="{% url 'dashboard_admin:lista_polizas_cliente' pk=cliente.pk %}" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary-assecol">Guardar Póliza</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# El script de JavaScript para el campo condicional no cambia #}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modoPagoSelect = document.getElementById('id_modo_pago');
+        const plazoContainer = document.getElementById('plazo-meses-container');
+
+        function togglePlazoVisibility() {
+            const selectedValue = modoPagoSelect.value;
+            if (selectedValue === 'CREDITO' || selectedValue === 'MENSUAL') {
+                plazoContainer.style.display = 'block';
+            } else {
+                plazoContainer.style.display = 'none';
+            }
+        }
+        togglePlazoVisibility();
+        modoPagoSelect.addEventListener('change', togglePlazoVisibility);
+    });
+</script>
+{% endblock %}

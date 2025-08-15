@@ -1,0 +1,62 @@
+.d-flex.align-items-stretch {
+    min-height: calc(100vh - 58px); /* Altura de la ventana menos la navbar */
+}
+
+.sidebar {
+    min-width: 250px;
+    max-width: 250px;
+    background-color: #212529; /* Color oscuro */
+    color: #fff;
+}
+
+.content {
+    flex-grow: 1; 
+    width: calc(100% - 250px);
+}
+
+.stat-card {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    text-align: center;
+}
+
+.stat-card h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--assecol-blue);
+}
+
+
+.sidebar .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+}
+
+/* static/css/dashboard_admin.css */
+
+/* ... (los estilos de .sidebar y .content que ya tenías) ... */
+
+/* Estilo para la tarjeta de información del cliente */
+.card-body h2 {
+    color: var(--assecol-blue, #123AA9); /* Usa el color de la marca si está definido */
+    font-weight: 700;
+}
+
+/* Estilo para las cabeceras de sección */
+.content h4 {
+    font-weight: 600;
+    color: #343a40;
+}
+
+/* Estilos adicionales para las tarjetas de pólizas */
+.card .fw-bold.text-primary {
+    color: var(--assecol-blue, #123AA9) !important;
+}
+
+.card .small.text-muted {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}

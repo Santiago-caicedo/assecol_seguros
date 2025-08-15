@@ -1,0 +1,154 @@
+/* static/css/brand.css */
+
+/* Definimos los colores de la marca Assecol como variables */
+:root {
+    --assecol-blue: #123AA9;
+    --assecol-orange: #FE7C04;
+    --assecol-light-blue: #303AF3;
+    --assecol-text: #333;
+    --assecol-background: #f8f9fa;
+}
+
+/* Aplicamos la tipografía y el color de fondo a toda la página */
+body {
+    font-family: 'Montserrat', sans-serif;
+    background-color: var(--assecol-background);
+    color: var(--assecol-text);
+}
+
+/* Estilos para la barra de navegación */
+.navbar-brand-assecol {
+    font-weight: 700; /* Bold */
+    color: var(--assecol-blue) !important;
+}
+
+/* Estilos para las tarjetas de pólizas */
+.policy-card {
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    transition: box-shadow 0.2s ease-in-out;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.04);
+    background-color: #fff;
+}
+
+.policy-card .card-title {
+    font-weight: 700; /* Bold */
+    color: var(--assecol-blue);
+}
+
+.policy-icon {
+    color: var(--assecol-blue);
+}
+
+/* Estilos para la etiqueta de estado de la póliza */
+.status-badge {
+    padding: 0.35em 0.75em;
+    border-radius: 50rem;
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: #fff;
+}
+
+.status-active {
+    background-color: var(--assecol-orange); /* Naranja para destacar lo activo */
+}
+
+.status-expired {
+    background-color: #6c757d; /* Un gris neutral para lo vencido */
+}
+
+
+.status-cancelled {
+    background-color: #ffc107; /* Amarillo/ámbar de Bootstrap (bg-warning) */
+    color: #000; /* Texto oscuro para mejor contraste con el amarillo */
+}
+
+/* Estilo para los botones principales */
+.btn-primary-assecol {
+    background-color: var(--assecol-orange);
+    border-color: var(--assecol-orange);
+    color: #fff;
+    font-weight: 700;
+}
+
+.btn-primary-assecol:hover {
+    background-color: #e87000; /* Un naranja un poco más oscuro */
+    border-color: #e87000;
+    color: #fff;
+}
+
+/* Estilos para las tarjetas de estadísticas del dashboard del cliente */
+.stat-card-client {
+  background-color: #fff;
+  border: none;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease-in-out;
+}
+
+.stat-card-client:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.08);
+}
+
+.stat-card-client .icon {
+  font-size: 2.5rem;
+  margin-right: 1.5rem;
+  color: var(--assecol-orange);
+}
+
+.stat-card-client .stat-info h1 {
+  font-weight: 700;
+  color: var(--assecol-blue);
+  margin: 0;
+}
+
+.stat-card-client .stat-info p {
+  margin: 0;
+  color: #6c757d;
+}
+
+
+.welcome-banner {
+  background-color: #eef2f9; /* Un azul muy pálido, casi blanco */
+  border-left: 5px solid var(--assecol-blue); /* Acento fuerte con el color principal de la marca */
+  padding: 2rem;
+  border-radius: 0.75rem;
+  margin-bottom: 2.5rem !important;
+}
+
+.welcome-banner h1 {
+  font-weight: 300; /* Letra más ligera para "Bienvenido," */
+  color: #2c3e50; /* Un color oscuro pero no negro puro, más suave a la vista */
+}
+
+.welcome-banner h1 strong {
+  font-weight: 700; /* Letra en negrita para el nombre del cliente */
+  color: var(--assecol-blue); /* Usamos el color principal de la marca para resaltar */
+}
+
+.welcome-banner .lead {
+  color: #5a6a7a; /* Un gris azulado que combina bien */
+  margin-bottom: 0;
+  font-size: 1.1rem;
+}
+
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 74px); /* Esta línea es la más importante */
+  padding: 2rem 0;
+}
+
+
+/* Contenedor para controlar el tamaño de los gráficos de Chart.js */
+.chart-container {
+  position: relative;
+  height: 350px; /* Puedes ajustar esta altura como prefieras */
+  width: 100%;
+}

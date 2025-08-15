@@ -1,0 +1,23 @@
+{% extends "dashboard_admin/dashboard_base.html" %}
+
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2">{{ titulo }}</h1>
+    <a href="{% url 'dashboard_admin:lista_companias' %}" class="btn btn-outline-secondary btn-sm">Cancelar</a>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-4">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="{{ form.nombre.id_for_label }}" class="form-label">Nombre</label>
+                {{ form.nombre }}
+            </div>
+            <div class="mt-4 text-end">
+                <button type="submit" class="btn btn-primary-assecol">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

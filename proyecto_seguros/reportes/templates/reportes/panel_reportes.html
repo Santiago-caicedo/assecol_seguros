@@ -1,0 +1,152 @@
+{% extends "dashboard_admin/dashboard_base.html" %}
+{% load humanize %}
+{% load reportes_extras %}
+
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2">Reportes y Métricas</h1>
+    <button class="btn btn-outline-danger btn-sm" disabled>
+        <i class="fas fa-file-pdf me-2"></i>Descargar PDF (Próximamente)
+    </button>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <form method="get">
+            <div class="row g-3 align-items-center">
+                <div class="col-auto"><label for="mes" class="col-form-label">Mes</label></div>
+                <div class="col-auto">
+                    <select name="mes" id="mes" class="form-select">
+                        {% for num, nombre in meses %}<option value="{{ num }}" {% if num == mes_seleccionado %}selected{% endif %}>{{ nombre }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto"><label for="ano" class="col-form-label">Año</label></div>
+                <div class="col-auto">
+                    <select name="ano" id="ano" class="form-select">
+                        {% for ano in rango_anos %}<option value="{{ ano }}" {% if ano == ano_seleccionado %}selected{% endif %}>{{ ano }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto"><button type="submit" class="btn btn-primary-assecol">Aplicar Filtro</button></div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-4 mb-4">
+        <div class="stat-card">
+            <p class="text-secondary text-uppercase">Comisiones Recibidas (Mes)</p>
+            <div class="d-flex justify-content-center align-items-center">
+                <h1>${{ total_comisiones_mes|intcomma }}</h1>
+                {% if comision_mom_change != 0 %}<span class="badge ms-3 {% if comision_mom_change > 0 %}text-bg-success{% else %}text-bg-danger{% endif %}">{% if comision_mom_change > 0 %}&#x25B2;{% else %}&#x25BC;{% endif %} {{ comision_mom_change }}%</span>{% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="stat-card">
+            <p class="text-secondary text-uppercase">Ventas en Primas (Mes)</p>
+            <h1>${{ total_ventas_mes|intcomma }}</h1>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="stat-card">
+            <p class="text-secondary text-uppercase">Nuevas Pólizas (Mes)</p>
+            <div class="d-flex justify-content-center align-items-center">
+                <h1>{{ nuevas_polizas_mes }}</h1>
+                {% if polizas_mom_change != 0 %}<span class="badge ms-3 {% if polizas_mom_change > 0 %}text-bg-success{% else %}text-bg-danger{% endif %}">{% if polizas_mom_change > 0 %}&#x25B2;{% else %}&#x25BC;{% endif %} {{ polizas_mom_change }}%</span>{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-lg-5 mb-4">
+        <div class="card shadow-sm border-0 h-100"><div class="card-body">
+                <h5 class="card-title mb-3">Ventas por Tipo de Seguro ({{ meses|getItem:mes_seleccionado }})</h5>
+                <div class="chart-container"><canvas id="ventasPorTipoChart"></canvas></div>
+        </div></div>
+    </div>
+    <div class="col-lg-7 mb-4">
+        <div class="card shadow-sm border-0 h-100"><div class="card-body">
+                <h5 class="card-title mb-3">Tendencia de Comisiones (Últimos 12 Meses)</h5>
+                <div class="chart-container"><canvas id="commissionTrendChart"></canvas></div>
+        </div></div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-lg-7 mb-4">
+        <div class="card shadow-sm border-0 h-100"><div class="card-body">
+                <h5 class="card-title mb-3">Comisiones por Compañía Aseguradora ({{ meses|getItem:mes_seleccionado }})</h5>
+                <div class="chart-container"><canvas id="performanceByCompanyChart"></canvas></div>
+        </div></div>
+    </div>
+    <div class="col-lg-5 mb-4">
+        <div class="card shadow-sm border-0 h-100"><div class="card-body">
+                <h5 class="card-title mb-3">Top 5 Clientes ({{ meses|getItem:mes_seleccionado }})</h5>
+                <table class="table align-middle">
+                    <tbody>
+                        {% for cliente in top_clientes %}
+                        <tr>
+                            <td>{{ forloop.counter }}. {{ cliente.nombre }}</td>
+                            <td class="text-end fw-bold">${{ cliente.comision|intcomma }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td>No hay datos de comisiones este mes.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+        </div></div>
+    </div>
+</div>
+<div class="row mt-4">
+    <div class="col-lg-5 mb-4">
+         <div class="card shadow-sm border-0 h-100"><div class="card-body">
+                <h5 class="card-title mb-3">Salud General de la Cartera</h5>
+                <div class="chart-container"><canvas id="portfolioHealthChart"></canvas></div>
+        </div></div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gráfico 1: Dona de Ventas por Tipo
+    const dataPie = {{ data_grafico_tipos|safe }};
+    if (dataPie.length > 0) {
+        new Chart(document.getElementById('ventasPorTipoChart'), {
+            type: 'doughnut', data: { labels: {{ labels_grafico_tipos|safe }}, datasets: [{ label: 'Ventas en Primas', data: dataPie, backgroundColor: ['#123AA9', '#FE7C04', '#6c757d', '#303AF3', '#ffc107'], borderColor: '#fff', borderWidth: 2 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+        });
+    }
+
+    // Gráfico 2: Barras de Tendencia de Comisiones
+    const trendData = {{ data_tendencia|safe }};
+    if (trendData.length > 0) {
+        new Chart(document.getElementById('commissionTrendChart'), {
+            type: 'bar', data: { labels: {{ labels_tendencia|safe }}, datasets: [{ label: 'Comisiones Ganadas', data: trendData, backgroundColor: 'rgba(254, 124, 4, 0.7)', borderColor: 'rgba(254, 124, 4, 1)', borderWidth: 1, borderRadius: 4 }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { callback: function(value) { return '$' + new Intl.NumberFormat().format(value); } } } },
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(c) { return `${c.dataset.label}: ${new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(c.parsed.y)}` } } } }
+            }
+        });
+    }
+
+    // Gráfico 3: Barras Horizontales de Rendimiento por Compañía
+    const dataCompanias = {{ data_companias|safe }};
+    if (dataCompanias.length > 0) {
+        new Chart(document.getElementById('performanceByCompanyChart'), {
+            type: 'bar', data: { labels: {{ labels_companias|safe }}, datasets: [{ label: 'Comisión Generada', data: dataCompanias, backgroundColor: 'rgba(18, 58, 169, 0.7)' }] },
+            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+    }
+
+    // Gráfico 4: Torta de Salud de Cartera
+    const dataSalud = {{ data_salud_cartera|safe }};
+    if (dataSalud.length > 0) {
+        new Chart(document.getElementById('portfolioHealthChart'), {
+            type: 'pie', data: { labels: {{ labels_salud_cartera|safe }}, datasets: [{ data: dataSalud, backgroundColor: ['#28a745', '#dc3545', '#0d6efd'] }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+        });
+    }
+});
+</script>
+{% endblock %}

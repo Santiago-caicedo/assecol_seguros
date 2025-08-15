@@ -1,0 +1,14 @@
+{% extends "dashboard_admin/dashboard_base.html" %}
+{% block dashboard_content %}
+<h1 class="h2 mb-4">{{ titulo }}</h1>
+<div class="card shadow-sm border-0"><div class="card-body p-4">
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="mt-4 text-end">
+            <a href="{% url 'dashboard_admin:lista_vehiculos' %}" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary-assecol">Guardar Vehículo</button>
+        </div>
+    </form>
+</div></div>
+{% endblock %}

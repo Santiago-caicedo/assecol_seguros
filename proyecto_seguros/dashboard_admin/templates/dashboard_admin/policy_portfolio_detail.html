@@ -1,0 +1,80 @@
+{% extends "dashboard_admin/dashboard_base.html" %}
+{% load humanize %}
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2">Detalle de Cartera</h1>
+        <p class="text-muted mb-0">Póliza #{{ poliza.numero_poliza }} para {{ poliza.cliente.get_full_name }}</p>
+    </div>
+    <a href="{% url 'dashboard_admin:cartera_general' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-2"></i>Volver a Cartera
+    </a>
+</div>
+
+{# Mostramos la tabla de cuotas solo si la póliza es de PAGO MENSUAL #}
+{% if poliza.modo_pago == 'MENSUAL' %}
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">Plan de Pagos Mensual</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th># Cuota</th>
+                        <th>Fecha Vencimiento</th>
+                        <th>Monto</th>
+                        <th>Estado</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cuota in poliza.cuotas.all %}
+                    <tr>
+                        <td class="fw-bold">{{ cuota.numero_cuota }}</td>
+                        <td>{{ cuota.fecha_vencimiento|date:"d M, Y" }}</td>
+                        <td>${{ cuota.monto_cuota|intcomma }}</td>
+                        <td>
+                            {# Lógica de la insignia de estado corregida #}
+                            {% if cuota.estado == 'PAGADA' %}
+                                <span class="badge rounded-pill text-bg-success">Pagada</span>
+                            {% elif cuota.estado == 'EN_MORA' %}
+                                <span class="badge rounded-pill text-bg-danger">En Mora</span>
+                            {% else %}
+                                <span class="badge rounded-pill text-bg-warning">Pendiente</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if cuota.estado == 'PAGADA' %}
+                                <span class="text-muted small">Registrado</span>
+                            {% else %}
+                                <div class="d-flex justify-content-end">
+                                    <form action="{% url 'dashboard_admin:marcar_cuota_pagada' pk=cuota.pk %}" method="post" class="me-2">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success btn-sm">Pagada</button>
+                                    </form>
+                                    
+                                    {% if cuota.estado == 'PENDIENTE' %}
+                                        <form action="{% url 'dashboard_admin:marcar_cuota_mora' pk=cuota.pk %}" method="post">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-warning btn-sm">En Mora</button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+    <div class="alert alert-info">
+        Esta póliza no tiene un plan de pagos mensual para gestionar. El recaudo es gestionado directamente por la entidad financiera o fue pagada de contado.
+    </div>
+{% endif %}
+
+{% endblock %}

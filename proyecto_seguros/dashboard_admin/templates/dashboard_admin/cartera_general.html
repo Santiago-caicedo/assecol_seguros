@@ -1,0 +1,103 @@
+{% extends "dashboard_admin/dashboard_base.html" %}
+{% load humanize %}
+
+{% block dashboard_content %}
+<h1 class="h2 mb-4">Panel de Cartera</h1>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="stat-card">
+            <p class="text-secondary text-uppercase">Total Ventas (Primas)</p>
+            <h1>${{ total_ventas|intcomma }}</h1>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="stat-card">
+            <p class="text-secondary text-uppercase">Total Comisiones Ganadas</p>
+            <h1>${{ total_comisiones|intcomma }}</h1>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <form method="get" action="{% url 'dashboard_admin:cartera_general' %}">
+                    <div class="input-group">
+                        <select name="cliente" class="form-select">
+                            <option value="">Todos los clientes</option>
+                            {% for cliente in todos_los_clientes %}
+                                <option value="{{ cliente.pk }}" {% if cliente.pk == cliente_seleccionado|add:0 %}selected{% endif %}>
+                                    {{ cliente.get_full_name|default:cliente.username }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <button class="btn btn-outline-secondary" type="submit">Filtrar</button>
+                    </div>
+                </form>
+            </div>
+            <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                {% if polizas_en_mora %}
+                <span class="badge rounded-pill text-bg-danger fs-6">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    {{ polizas_en_mora.count }} Póliza(s) en Mora
+                </span>
+                {% else %}
+                <span class="badge rounded-pill text-bg-success fs-6">
+                    <i class="fas fa-check-circle me-1"></i>
+                    Cartera al día
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Póliza</th>
+                        <th>Cliente</th>
+                        <th>Prima Total</th>
+                        <th>Comisión</th>
+                        <th>Modalidad Pago</th>
+                        <th>Estado Cartera</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for poliza in polizas %}
+                    <tr>
+                        <td class="fw-bold">{{ poliza.numero_poliza }}</td>
+                        <td>{{ poliza.cliente.get_full_name|default:poliza.cliente.username }}</td>
+                        <td>${{ poliza.prima_total|intcomma }}</td>
+                        <td>${{ poliza.valor_comision|intcomma }}</td>
+                        <td>{{ poliza.get_modo_pago_display }}</td>
+                        <td>
+                            {% if poliza.estado_cartera == 'AL_DIA' %}
+                                <span class="badge rounded-pill text-bg-success">Al día</span>
+                            {% elif poliza.estado_cartera == 'EN_MORA' %}
+                                <span class="badge rounded-pill text-bg-danger">En Mora</span>
+                            {% elif poliza.estado_cartera == 'PAGO_COMPLETO' %}
+                                 <span class="badge rounded-pill text-bg-primary">Pago Completo</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'dashboard_admin:detalle_cartera_poliza' pk=poliza.pk %}" class="btn btn-outline-primary btn-sm">Gestionar Cartera</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center p-4">No hay pólizas que coincidan con los filtros seleccionados.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

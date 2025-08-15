@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_head %}
+  {# Añadimos los íconos aquí para que solo se carguen en las páginas del dashboard #}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-stretch">
+    <div class="sidebar p-3">
+        <h4 class="mb-4">Admin Panel</h4>
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{% url 'dashboard_admin:dashboard_home' %}">
+                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{% url 'dashboard_admin:lista_clientes' %}">
+                    <i class="fas fa-users me-2"></i>Clientes
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{% url 'dashboard_admin:lista_vehiculos' %}">
+                    <i class="fas fa-car me-2"></i>Vehículos
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{% url 'dashboard_admin:cartera_general' %}">
+                    <i class="fas fa-wallet me-2"></i>Cartera
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{% url 'dashboard_admin:lista_tipos_seguro' %}">
+                    <i class="fas fa-shield-alt me-2"></i>Tipos de Seguro
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{% url 'dashboard_admin:lista_companias' %}">
+                    <i class="fas fa-building me-2"></i>Compañías
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-white" href="{% url 'reportes:panel_reportes' %}">
+                    <i class="fas fa-chart-line me-2"></i>Reportes
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="content p-4">
+        <div class="container-fluid">
+          {% block dashboard_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}
