@@ -24,7 +24,8 @@ from .views import (
     VehiculoUpdateView, 
     dashboard_home_view,
     marcar_cuota_mora_view,
-    marcar_cuota_pagada_view
+    marcar_cuota_pagada_view,
+    test_select2_view
 )
 
 app_name = 'dashboard_admin'
@@ -57,6 +58,7 @@ urlpatterns = [
     path('vehiculos/nuevo/', VehiculoCreateView.as_view(), name='crear_vehiculo'),
     path('vehiculos/editar/<int:pk>/', VehiculoUpdateView.as_view(), name='editar_vehiculo'),
     path('vehiculos/eliminar/<int:pk>/', VehiculoDeleteView.as_view(), name='eliminar_vehiculo'),
-
+    
+    path('test-select2/', test_select2_view, name='test_select2'),
 
 ]

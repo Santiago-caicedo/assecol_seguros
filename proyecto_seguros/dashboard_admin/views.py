@@ -548,3 +548,7 @@ class VehiculoDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def test_func(self):
         return self.request.user.is_staff
+
+
+def test_select2_view(request):
+    return render(request, 'dashboard_admin/debug_select2.html')
