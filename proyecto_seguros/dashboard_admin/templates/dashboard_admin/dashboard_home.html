@@ -25,86 +25,54 @@
 </div>
 
 <div class="row mt-4">
-    <div class="col-lg-5 mb-4">
+    <div class="col-lg-6 mb-4">
         <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-warning-subtle">
+                <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Pólizas por Vencer (Próximos 30 días)</h5>
+            </div>
             <div class="card-body">
-                <h5 class="card-title">Distribución de Pólizas</h5>
-                <canvas id="policiesByTypeChart"></canvas>
+                {% if lista_polizas_a_vencer %}
+                    <ul class="list-group list-group-flush">
+                    {% for poliza in lista_polizas_a_vencer %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ poliza.tipo_seguro.nombre }}</strong> (#{{ poliza.numero_poliza }})
+                                <small class="d-block text-muted">Cliente: {{ poliza.cliente.get_full_name }}</small>
+                            </div>
+                            <span class="badge text-bg-warning rounded-pill">{{ poliza.fecha_fin|date:"d M, Y" }}</span>
+                        </li>
+                    {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted text-center p-3">No hay pólizas próximas a vencer.</p>
+                {% endif %}
             </div>
         </div>
     </div>
-    <div class="col-lg-7 mb-4">
+
+    <div class="col-lg-6 mb-4">
         <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-danger-subtle">
+                <h5 class="mb-0"><i class="fas fa-car me-2"></i>Recordatorios SOAT (Próximos 15 días)</h5>
+            </div>
             <div class="card-body">
-                <h5 class="card-title">Nuevos Clientes (Últimos 12 meses)</h5>
-                <canvas id="newClientsChart"></canvas>
+                {% if lista_soats_a_vencer %}
+                    <ul class="list-group list-group-flush">
+                    {% for vehiculo in lista_soats_a_vencer %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Placa: {{ vehiculo.placa }}</strong>
+                                <small class="d-block text-muted">Cliente: {{ vehiculo.cliente.get_full_name }}</small>
+                            </div>
+                            <span class="badge text-bg-danger rounded-pill">{{ vehiculo.soat_vencimiento_recordatorio|date:"d M, Y" }}</span>
+                        </li>
+                    {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted text-center p-3">No hay recordatorios de SOAT próximos a vencer.</p>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // --- GRÁFICO 1: DONA DE PÓLIZAS POR TIPO ---
-    const ctxPie = document.getElementById('policiesByTypeChart');
-    new Chart(ctxPie, {
-        type: 'doughnut',
-        data: {
-            labels: {{ labels_pie_chart|safe }},
-            datasets: [{
-                label: 'Cantidad de Pólizas',
-                data: {{ data_pie_chart|safe }},
-                backgroundColor: [
-                    '#123AA9', // Assecol Blue
-                    '#FE7C04', // Assecol Orange
-                    '#6c757d', // Gray
-                    '#303AF3', // Assecol Light Blue
-                    '#ffc107'  // Yellow
-                ],
-                hoverOffset: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                }
-            }
-        }
-    });
-
-    // --- GRÁFICO 2: BARRAS DE NUEVOS CLIENTES ---
-    const ctxBar = document.getElementById('newClientsChart');
-    new Chart(ctxBar, {
-        type: 'bar',
-        data: {
-            labels: {{ labels_bar_chart|safe }},
-            datasets: [{
-                label: 'Nuevos Clientes',
-                data: {{ data_bar_chart|safe }},
-                backgroundColor: 'rgba(18, 58, 169, 0.7)', // Assecol Blue con transparencia
-                borderColor: 'rgba(18, 58, 169, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1 // Asegura que el eje Y vaya de 1 en 1
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: false // Ocultamos la leyenda para este gráfico
-                }
-            }
-        }
-    });
-});
-</script>
 {% endblock %}

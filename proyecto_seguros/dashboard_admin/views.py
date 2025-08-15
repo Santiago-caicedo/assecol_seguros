@@ -31,52 +31,40 @@ def es_admin(user):
 @login_required
 @user_passes_test(es_admin)
 def dashboard_home_view(request):
-    # --- Métricas existentes ---
-    # Métrica 1: Total de Clientes (excluyendo staff)
-    total_clientes = User.objects.filter(is_staff=False).count()
+    hoy = timezone.now().date()
 
-    # --- LÍNEA CORREGIDA ---
-    # Métrica 2: Total de Pólizas Activas
-    # Cambiamos 'esta_activa=True' por 'estado="ACTIVA"'
+    # --- Métricas existentes (no cambian) ---
+    total_clientes = User.objects.filter(is_staff=False).count()
     total_polizas_activas = Poliza.objects.filter(estado='ACTIVA').count()
 
-    # --- LÍNEAS CORREGIDAS ---
-    # Métrica 3: Pólizas que vencen pronto (en los próximos 30 días)
-    fecha_limite = date.today() + timedelta(days=30)
-    polizas_por_vencer = Poliza.objects.filter(
-        estado='ACTIVA', # Cambiamos 'esta_activa=True'
-        fecha_fin__lte=fecha_limite,
-        fecha_fin__gte=date.today()
-    ).count()
+    # --- LÓGICA PARA LAS NUEVAS ALERTAS ---
 
-    # --- Datos para Gráfico 1: Pólizas por Tipo ---
-    # Agrupamos por tipo de seguro y contamos cuántas pólizas tiene cada uno
-    polizas_por_tipo = TipoSeguro.objects.annotate(cantidad=Count('polizas')).order_by('-cantidad')
+    # 1. Pólizas generales que vencen en los próximos 30 días
+    fecha_limite_30_dias = hoy + timedelta(days=30)
+    polizas_a_vencer = Poliza.objects.filter(
+        estado='ACTIVA',
+        fecha_fin__gte=hoy,
+        fecha_fin__lte=fecha_limite_30_dias
+    ).select_related('cliente', 'tipo_seguro').order_by('fecha_fin')
 
-    # Preparamos las etiquetas y los datos para Chart.js
-    labels_pie_chart = [tipo.nombre for tipo in polizas_por_tipo]
-    data_pie_chart = [tipo.cantidad for tipo in polizas_por_tipo]
+    # 2. Recordatorios de SOAT que vencen en los próximos 15 días
+    fecha_limite_15_dias = hoy + timedelta(days=15)
+    soats_a_vencer = Vehiculo.objects.filter(
+        soat_vencimiento_recordatorio__gte=hoy,
+        soat_vencimiento_recordatorio__lte=fecha_limite_15_dias
+    ).select_related('cliente').order_by('soat_vencimiento_recordatorio')
 
-    # --- Datos para Gráfico 2: Nuevos Clientes por Mes (últimos 12 meses) ---
-    hace_un_ano = date.today() - timedelta(days=365)
-    clientes_por_mes = User.objects.filter(date_joined__gte=hace_un_ano, is_staff=False) \
-        .annotate(month=TruncMonth('date_joined')) \
-        .values('month') \
-        .annotate(count=Count('id')) \
-        .order_by('month')
-
-    labels_bar_chart = [mes['month'].strftime('%b %Y') for mes in clientes_por_mes]
-    data_bar_chart = [mes['count'] for mes in clientes_por_mes]
+    # El KPI de "Pólizas por Vencer" ahora puede usar el count de esta consulta
+    polizas_por_vencer_count = polizas_a_vencer.count()
 
     context = {
         'total_clientes': total_clientes,
         'total_polizas_activas': total_polizas_activas,
-        'polizas_por_vencer': polizas_por_vencer,
-        # Pasamos los datos del gráfico a la plantilla, convertidos a JSON
-        'labels_pie_chart': json.dumps(labels_pie_chart),
-        'data_pie_chart': json.dumps(data_pie_chart),
-        'labels_bar_chart': json.dumps(labels_bar_chart),
-        'data_bar_chart': json.dumps(data_bar_chart),
+        'polizas_por_vencer': polizas_por_vencer_count,
+
+        # 👇 AÑADIMOS LAS NUEVAS LISTAS AL CONTEXTO 👇
+        'lista_polizas_a_vencer': polizas_a_vencer,
+        'lista_soats_a_vencer': soats_a_vencer,
     }
     return render(request, 'dashboard_admin/dashboard_home.html', context)
 
