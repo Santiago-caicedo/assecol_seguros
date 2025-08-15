@@ -55,6 +55,12 @@
                 {% endif %}
                 </div>
                 <p class="text-muted small">Póliza #{{ poliza.numero_poliza }}</p>
+                {% if poliza.vehiculo %}
+                <p class="text-muted small">
+                    <i class="fas fa-car me-1"></i>
+                    Vehículo: <strong>{{ poliza.vehiculo.placa }}</strong>
+                </p>
+                {% endif %}
                 <hr>
                 {# Fechas #}
                 <div class="d-flex justify-content-between">
