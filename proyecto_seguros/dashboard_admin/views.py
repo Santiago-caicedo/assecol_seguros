@@ -10,7 +10,7 @@ from django.shortcuts import redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 from polizas.models import Poliza, TipoSeguro, CompaniaAseguradora, Vehiculo
 from polizas.forms import PolicyForm
-from .forms import CancelPolicyForm, VehiculoForm
+from .forms import CancelPolicyForm, DocumentoSiniestroForm, FotoSiniestroForm, VehiculoForm
 from .forms import ClientCreationForm, ClientUpdateForm, TipoSeguroForm, CompaniaAseguradoraForm
 from datetime import date, datetime, timedelta
 from django.utils import timezone
@@ -19,6 +19,9 @@ import json
 from django.db.models.functions import TruncMonth
 from django.db.models import Count
 from cartera.models import Cuota, Pago
+from siniestros.models import Siniestro
+from .forms import SiniestroForm
+from siniestros.models import DocumentoSiniestro, FotoSiniestro
 
 
 
@@ -637,3 +640,87 @@ def desmarcar_comision_liquidada_view(request, pk):
     pago.estado_comision = 'PENDIENTE'
     pago.save()
     return redirect('dashboard_admin:liquidacion_comisiones')
+
+
+
+class SiniestroListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = Siniestro
+    template_name = 'dashboard_admin/siniestro_list.html'
+    context_object_name = 'siniestros'
+    paginate_by = 20
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+class SiniestroCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    model = Siniestro
+    form_class = SiniestroForm
+    template_name = 'dashboard_admin/siniestro_form.html'
+    success_url = reverse_lazy('dashboard_admin:lista_siniestros')
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = 'Registrar Nuevo Siniestro'
+        return context
+
+
+
+class SiniestroDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    model = Siniestro
+    template_name = 'dashboard_admin/siniestro_detail.html'
+    context_object_name = 'siniestro'
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Pasamos los formularios de subida a la plantilla
+        context['documento_form'] = DocumentoSiniestroForm()
+        context['foto_form'] = FotoSiniestroForm()
+        return context
+
+@login_required
+@user_passes_test(es_admin)
+@require_POST
+def add_documento_view(request, siniestro_pk):
+    siniestro = get_object_or_404(Siniestro, pk=siniestro_pk)
+    form = DocumentoSiniestroForm(request.POST, request.FILES)
+    if form.is_valid():
+        documento = form.save(commit=False)
+        documento.siniestro = siniestro
+        documento.save()
+    return redirect('dashboard_admin:detalle_siniestro', pk=siniestro_pk)
+
+@login_required
+@user_passes_test(es_admin)
+@require_POST
+def add_foto_view(request, siniestro_pk):
+    siniestro = get_object_or_404(Siniestro, pk=siniestro_pk)
+    form = FotoSiniestroForm(request.POST, request.FILES)
+    if form.is_valid():
+        foto = form.save(commit=False)
+        foto.siniestro = siniestro
+        foto.save()
+    return redirect('dashboard_admin:detalle_siniestro', pk=siniestro_pk)
+
+@login_required
+@user_passes_test(es_admin)
+@require_POST
+def delete_documento_view(request, pk):
+    documento = get_object_or_404(DocumentoSiniestro, pk=pk)
+    siniestro_pk = documento.siniestro.pk
+    documento.delete()
+    return redirect('dashboard_admin:detalle_siniestro', pk=siniestro_pk)
+
+@login_required
+@user_passes_test(es_admin)
+@require_POST
+def delete_foto_view(request, pk):
+    foto = get_object_or_404(FotoSiniestro, pk=pk)
+    siniestro_pk = foto.siniestro.pk
+    foto.delete()
+    return redirect('dashboard_admin:detalle_siniestro', pk=siniestro_pk)

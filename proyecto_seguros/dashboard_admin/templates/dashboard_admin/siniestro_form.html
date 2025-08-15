@@ -1,0 +1,51 @@
+{% extends "dashboard_admin/dashboard_base.html" %}
+{% block dashboard_content %}
+<h1 class="h2 mb-4">{{ titulo }}</h1>
+<div class="card shadow-sm border-0"><div class="card-body p-4">
+    <form method="post">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-md-6 mb-3"><label class="form-label">{{ form.poliza.label }}</label>{{ form.poliza }}</div>
+            <div class="col-md-6 mb-3"><label class="form-label">{{ form.numero_siniestro.label }}</label>{{ form.numero_siniestro }}</div>
+        </div>
+        <div class="mb-3"><label class="form-label">{{ form.fecha_siniestro.label }}</label>{{ form.fecha_siniestro }}</div>
+        <hr>
+        <div class="row">
+            <div class="col-md-6 mb-3"><label class="form-label">{{ form.tipo_siniestro.label }}</label>{{ form.tipo_siniestro }}</div>
+            <div class="col-md-6 mb-3" id="subtipo-rc-container" style="display:none;"><label class="form-label">{{ form.subtipo_rc.label }}</label>{{ form.subtipo_rc }}</div>
+            <div class="col-md-6 mb-3" id="subtipo-dp-container" style="display:none;"><label class="form-label">{{ form.subtipo_dp.label }}</label>{{ form.subtipo_dp }}</div>
+        </div>
+        <div class="mb-3"><label class="form-label">{{ form.descripcion.label }}</label>{{ form.descripcion }}</div>
+
+        <div class="mt-4 text-end"><a href="{% url 'dashboard_admin:lista_siniestros' %}" class="btn btn-secondary">Cancelar</a><button type="submit" class="btn btn-primary-assecol">Guardar Siniestro</button></div>
+    </form>
+</div></div>
+{% endblock %}
+
+{% block extra_scripts %}
+{{ block.super }}
+<script>
+$(document).ready(function() {
+    // Activamos Select2 en el campo 'poliza'
+    $('#select-poliza').select2({ theme: "bootstrap-5" });
+
+    // Lógica para mostrar/ocultar subtipos
+    const tipoSiniestroSelect = $('#{{ form.tipo_siniestro.id_for_label }}');
+    const subtipoRcContainer = $('#subtipo-rc-container');
+    const subtipoDpContainer = $('#subtipo-dp-container');
+
+    function toggleSubtipo() {
+        const selectedType = tipoSiniestroSelect.val();
+        subtipoRcContainer.hide();
+        subtipoDpContainer.hide();
+        if (selectedType === 'RESPONSABILIDAD_CIVIL') {
+            subtipoRcContainer.show();
+        } else if (selectedType === 'DANOS_PROPIOS') {
+            subtipoDpContainer.show();
+        }
+    }
+    toggleSubtipo(); // Al cargar la página
+    tipoSiniestroSelect.on('change', toggleSubtipo); // Al cambiar la selección
+});
+</script>
+{% endblock %}

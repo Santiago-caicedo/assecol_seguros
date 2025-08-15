@@ -2,6 +2,8 @@
 from django import forms
 from django.contrib.auth.models import User
 from polizas.models import TipoSeguro, CompaniaAseguradora, Poliza, Vehiculo
+from siniestros.models import Siniestro
+from siniestros.models import DocumentoSiniestro, FotoSiniestro
 
 class ClientCreationForm(forms.ModelForm):
   
@@ -129,3 +131,45 @@ class VehiculoForm(forms.ModelForm):
         self.fields['cliente'].queryset = User.objects.filter(is_staff=False)
         for field in self.fields:
             self.fields[field].widget.attrs.update({'class': 'form-control'})
+
+
+
+class SiniestroForm(forms.ModelForm):
+    class Meta:
+        model = Siniestro
+        # Excluimos los campos de subtipo que manejaremos dinámicamente
+        # y los de estado que tienen valor por defecto.
+        fields = [
+            'poliza', 'numero_siniestro', 'fecha_siniestro', 
+            'tipo_siniestro', 'subtipo_rc', 'subtipo_dp', 'descripcion'
+        ]
+        widgets = {
+            'fecha_siniestro': forms.DateInput(attrs={'type': 'date'}),
+            'descripcion': forms.Textarea(attrs={'rows': 4}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Aplicamos clases de Bootstrap y activamos Select2 para la póliza
+        self.fields['poliza'].widget.attrs.update({'class': 'form-control', 'id': 'select-poliza'})
+        # ... (resto de campos)
+        for field_name in ['numero_siniestro', 'fecha_siniestro', 'tipo_siniestro', 'subtipo_rc', 'subtipo_dp', 'descripcion']:
+            self.fields[field_name].widget.attrs.update({'class': 'form-control'})
+
+
+
+class DocumentoSiniestroForm(forms.ModelForm):
+    class Meta:
+        model = DocumentoSiniestro
+        fields = ['documento', 'descripcion']
+        widgets = {
+            'descripcion': forms.TextInput(attrs={'placeholder': 'Descripción breve del documento'}),
+        }
+
+class FotoSiniestroForm(forms.ModelForm):
+    class Meta:
+        model = FotoSiniestro
+        fields = ['foto', 'descripcion']
+        widgets = {
+            'descripcion': forms.TextInput(attrs={'placeholder': 'Descripción breve de la foto'}),
+        }

@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'dashboard_admin',
     'cartera',
     'reportes',
+    'siniestros',
     'django.contrib.humanize',
     
 ]

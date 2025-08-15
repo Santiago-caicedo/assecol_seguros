@@ -15,6 +15,9 @@ from .views import (
     PolicyCreateView,
     PolicyPortfolioDetailView,
     PolicyUpdateView,
+    SiniestroCreateView,
+    SiniestroDetailView,
+    SiniestroListView,
     TipoSeguroCreateView,
     TipoSeguroDeleteView,
     TipoSeguroListView,
@@ -22,8 +25,12 @@ from .views import (
     VehiculoCreateView,
     VehiculoDeleteView,
     VehiculoListView,
-    VehiculoUpdateView, 
+    VehiculoUpdateView,
+    add_documento_view,
+    add_foto_view, 
     dashboard_home_view,
+    delete_documento_view,
+    delete_foto_view,
     desmarcar_comision_liquidada_view,
     marcar_comision_liquidada_view,
     marcar_cuota_mora_view,
@@ -68,5 +75,18 @@ urlpatterns = [
     path('liquidaciones/', LiquidacionComisionesView.as_view(), name='liquidacion_comisiones'),
     path('pagos/<int:pk>/marcar-liquidada/', marcar_comision_liquidada_view, name='marcar_comision_liquidada'),
     path('pagos/<int:pk>/desmarcar-liquidada/', desmarcar_comision_liquidada_view, name='desmarcar_comision_liquidada'),
+
+
+    path('siniestros/', SiniestroListView.as_view(), name='lista_siniestros'),
+    path('siniestros/nuevo/', SiniestroCreateView.as_view(), name='crear_siniestro'),
+
+
+
+    path('siniestros/<int:pk>/', SiniestroDetailView.as_view(), name='detalle_siniestro'),
+    path('siniestros/<int:siniestro_pk>/add-documento/', add_documento_view, name='add_documento_siniestro'),
+    path('siniestros/<int:siniestro_pk>/add-foto/', add_foto_view, name='add_foto_siniestro'),
+    path('documentos/<int:pk>/delete/', delete_documento_view, name='delete_documento_siniestro'),
+    path('fotos/<int:pk>/delete/', delete_foto_view, name='delete_foto_siniestro'),
+
 
 ]
