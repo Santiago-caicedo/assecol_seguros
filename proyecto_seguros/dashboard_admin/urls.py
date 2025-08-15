@@ -10,6 +10,7 @@ from .views import (
     CompaniaAseguradoraDeleteView,
     CompaniaAseguradoraListView,
     CompaniaAseguradoraUpdateView,
+    LiquidacionComisionesView,
     PolicyCancelView,
     PolicyCreateView,
     PolicyPortfolioDetailView,
@@ -23,6 +24,8 @@ from .views import (
     VehiculoListView,
     VehiculoUpdateView, 
     dashboard_home_view,
+    desmarcar_comision_liquidada_view,
+    marcar_comision_liquidada_view,
     marcar_cuota_mora_view,
     marcar_cuota_pagada_view,
     test_select2_view
@@ -60,5 +63,10 @@ urlpatterns = [
     path('vehiculos/eliminar/<int:pk>/', VehiculoDeleteView.as_view(), name='eliminar_vehiculo'),
     
     path('test-select2/', test_select2_view, name='test_select2'),
+
+
+    path('liquidaciones/', LiquidacionComisionesView.as_view(), name='liquidacion_comisiones'),
+    path('pagos/<int:pk>/marcar-liquidada/', marcar_comision_liquidada_view, name='marcar_comision_liquidada'),
+    path('pagos/<int:pk>/desmarcar-liquidada/', desmarcar_comision_liquidada_view, name='desmarcar_comision_liquidada'),
 
 ]

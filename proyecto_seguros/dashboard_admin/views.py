@@ -12,7 +12,7 @@ from polizas.models import Poliza, TipoSeguro, CompaniaAseguradora, Vehiculo
 from polizas.forms import PolicyForm
 from .forms import CancelPolicyForm, VehiculoForm
 from .forms import ClientCreationForm, ClientUpdateForm, TipoSeguroForm, CompaniaAseguradoraForm
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from django.utils import timezone
 from django.db.models import Sum, Q
 import json
@@ -552,3 +552,88 @@ class VehiculoDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
 def test_select2_view(request):
     return render(request, 'dashboard_admin/debug_select2.html')
+
+#VISTAS PARA COMISIONES 
+
+
+class LiquidacionComisionesView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = Pago
+    template_name = 'dashboard_admin/liquidacion_comisiones.html'
+    context_object_name = 'pagos_list' # Usaremos este nombre en la plantilla
+    paginate_by = 15
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+    def get_queryset(self):
+        queryset = Pago.objects.select_related(
+            'poliza__cliente', 
+            'poliza__tipo_seguro', 
+            'poliza__compania_aseguradora'
+        ).all()
+
+        # Lógica de Filtros para la Tabla
+        cliente_id = self.request.GET.get('cliente_id')
+        compania_id = self.request.GET.get('compania_id')
+        fecha_inicio = self.request.GET.get('fecha_inicio')
+        fecha_fin = self.request.GET.get('fecha_fin')
+
+        if cliente_id:
+            queryset = queryset.filter(poliza__cliente_id=cliente_id)
+        if compania_id:
+            queryset = queryset.filter(poliza__compania_aseguradora_id=compania_id)
+        if fecha_inicio:
+            queryset = queryset.filter(fecha_pago__gte=fecha_inicio)
+        if fecha_fin:
+            queryset = queryset.filter(fecha_pago__lte=fecha_fin)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # --- Lógica para las Tarjetas de Métricas ---
+        hoy = timezone.now()
+        ano_kpi = int(self.request.GET.get('ano_kpi', hoy.year))
+        mes_kpi = int(self.request.GET.get('mes_kpi', hoy.month))
+
+        pagos_para_kpi = Pago.objects.filter(fecha_pago__year=ano_kpi, fecha_pago__month=mes_kpi)
+
+        total_liquidado = pagos_para_kpi.filter(estado_comision='LIQUIDADA').aggregate(total=Sum('monto_pagado'))['total'] or 0
+        total_pendiente = pagos_para_kpi.filter(estado_comision='PENDIENTE').aggregate(total=Sum('monto_pagado'))['total'] or 0
+        
+
+        context['total_pendiente'] = total_pendiente
+        context['total_liquidado'] = total_liquidado
+
+        # --- Pasamos datos adicionales para los filtros ---
+        context['todos_los_clientes'] = User.objects.filter(is_staff=False)
+        context['todas_las_companias'] = CompaniaAseguradora.objects.all()
+        context['rango_anos'] = range(hoy.year, hoy.year - 5, -1)
+        context['meses'] = [(i, datetime(2000, i, 1).strftime('%B').capitalize()) for i in range(1, 13)]
+        context['mes_seleccionado_kpi'] = mes_kpi
+        context['ano_seleccionado_kpi'] = ano_kpi
+        context['filtros_aplicados'] = self.request.GET.urlencode()
+
+        return context
+
+
+@login_required
+@user_passes_test(es_admin)
+@require_POST
+def marcar_comision_liquidada_view(request, pk):
+    pago = get_object_or_404(Pago, pk=pk)
+    pago.estado_comision = 'LIQUIDADA'
+    pago.save()
+    return redirect('dashboard_admin:liquidacion_comisiones')
+
+
+@login_required
+@user_passes_test(es_admin)
+@require_POST
+def desmarcar_comision_liquidada_view(request, pk):
+    pago = get_object_or_404(Pago, pk=pk)
+    # Simplemente revertimos el estado a PENDIENTE
+    pago.estado_comision = 'PENDIENTE'
+    pago.save()
+    return redirect('dashboard_admin:liquidacion_comisiones')

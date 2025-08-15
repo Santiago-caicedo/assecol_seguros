@@ -22,6 +22,11 @@ class Cuota(models.Model):
         return f"Cuota {self.numero_cuota} de {self.poliza.numero_poliza}"
 
 class Pago(models.Model):
+
+    ESTADO_COMISION_CHOICES = [
+        ('PENDIENTE', 'Pendiente de Liquidar'),
+        ('LIQUIDADA', 'Liquidada'),
+    ]
     poliza = models.ForeignKey(Poliza, on_delete=models.CASCADE, related_name='pagos')
     # El pago puede estar asociado a una cuota específica (para pagos mensuales) o no (para pago de contado)
     cuota = models.ForeignKey(Cuota, on_delete=models.SET_NULL, null=True, blank=True, related_name='pagos')
@@ -29,6 +34,13 @@ class Pago(models.Model):
     monto_pagado = models.DecimalField(max_digits=12, decimal_places=2)
     comprobante = models.FileField(upload_to='comprobantes/', blank=True, null=True)
     notas = models.TextField(blank=True)
+
+    estado_comision = models.CharField(
+        "Estado de Liquidación",
+        max_length=15,
+        choices=ESTADO_COMISION_CHOICES,
+        default='PENDIENTE'
+    )
 
     class Meta:
         ordering = ['-fecha_pago']
