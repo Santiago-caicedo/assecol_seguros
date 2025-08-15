@@ -15,7 +15,14 @@
                     <td>{{ vehiculo.cliente.get_full_name }}</td>
                     <td>{{ vehiculo.marca }} {{ vehiculo.modelo }} ({{ vehiculo.ano }})</td>
                     <td>{{ vehiculo.soat_vencimiento_recordatorio|date:"d M, Y"|default:"N/A" }}</td>
-                    <td></td>
+                    <td class="text-end">
+                        <a href="{% url 'dashboard_admin:editar_vehiculo' pk=vehiculo.pk %}" class="btn btn-outline-secondary btn-sm" title="Editar Vehículo">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'dashboard_admin:eliminar_vehiculo' pk=vehiculo.pk %}" class="btn btn-outline-danger btn-sm" title="Eliminar Vehículo">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </td>
                 </tr>
             {% empty %}
                 <tr><td colspan="5" class="text-center p-4">No hay vehículos registrados.</td></tr>

@@ -19,7 +19,9 @@ from .views import (
     TipoSeguroListView,
     TipoSeguroUpdateView,
     VehiculoCreateView,
-    VehiculoListView, 
+    VehiculoDeleteView,
+    VehiculoListView,
+    VehiculoUpdateView, 
     dashboard_home_view,
     marcar_cuota_mora_view,
     marcar_cuota_pagada_view
@@ -53,6 +55,8 @@ urlpatterns = [
     path('cuotas/<int:pk>/marcar-mora/', marcar_cuota_mora_view, name='marcar_cuota_mora'),
     path('vehiculos/', VehiculoListView.as_view(), name='lista_vehiculos'),
     path('vehiculos/nuevo/', VehiculoCreateView.as_view(), name='crear_vehiculo'),
+    path('vehiculos/editar/<int:pk>/', VehiculoUpdateView.as_view(), name='editar_vehiculo'),
+    path('vehiculos/eliminar/<int:pk>/', VehiculoDeleteView.as_view(), name='eliminar_vehiculo'),
 
 
 ]

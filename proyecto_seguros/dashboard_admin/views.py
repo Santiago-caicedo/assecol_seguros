@@ -521,3 +521,26 @@ class VehiculoCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         context = super().get_context_data(**kwargs)
         context['titulo'] = 'Añadir Nuevo Vehículo'
         return context
+
+
+class VehiculoUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Vehiculo
+    form_class = VehiculoForm # Reutilizamos el mismo formulario de creación
+    template_name = 'dashboard_admin/vehiculo_form.html'
+    success_url = reverse_lazy('dashboard_admin:lista_vehiculos')
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = 'Editar Vehículo'
+        return context
+
+class VehiculoDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Vehiculo
+    template_name = 'dashboard_admin/confirm_delete.html' # Reutilizamos la plantilla genérica
+    success_url = reverse_lazy('dashboard_admin:lista_vehiculos')
+
+    def test_func(self):
+        return self.request.user.is_staff
