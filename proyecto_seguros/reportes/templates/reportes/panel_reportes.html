@@ -61,28 +61,35 @@
 
 <div class="row mt-4">
     <div class="col-lg-5 mb-4">
-        <div class="card shadow-sm border-0 h-100"><div class="card-body">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
                 <h5 class="card-title mb-3">Ventas por Tipo de Seguro ({{ meses|getItem:mes_seleccionado }})</h5>
                 <div class="chart-container"><canvas id="ventasPorTipoChart"></canvas></div>
-        </div></div>
+            </div>
+        </div>
     </div>
     <div class="col-lg-7 mb-4">
-        <div class="card shadow-sm border-0 h-100"><div class="card-body">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
                 <h5 class="card-title mb-3">Tendencia de Comisiones (Últimos 12 Meses)</h5>
                 <div class="chart-container"><canvas id="commissionTrendChart"></canvas></div>
-        </div></div>
+            </div>
+        </div>
     </div>
 </div>
 
 <div class="row mt-4">
     <div class="col-lg-7 mb-4">
-        <div class="card shadow-sm border-0 h-100"><div class="card-body">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
                 <h5 class="card-title mb-3">Comisiones por Compañía Aseguradora ({{ meses|getItem:mes_seleccionado }})</h5>
                 <div class="chart-container"><canvas id="performanceByCompanyChart"></canvas></div>
-        </div></div>
+            </div>
+        </div>
     </div>
     <div class="col-lg-5 mb-4">
-        <div class="card shadow-sm border-0 h-100"><div class="card-body">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
                 <h5 class="card-title mb-3">Top 5 Clientes ({{ meses|getItem:mes_seleccionado }})</h5>
                 <table class="table align-middle">
                     <tbody>
@@ -92,19 +99,22 @@
                             <td class="text-end fw-bold">${{ cliente.comision|intcomma }}</td>
                         </tr>
                         {% empty %}
-                        <tr><td>No hay datos de comisiones este mes.</td></tr>
+                        <tr><td>No hay comisiones este mes para mostrar un ranking.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
-        </div></div>
+            </div>
+        </div>
     </div>
 </div>
 <div class="row mt-4">
     <div class="col-lg-5 mb-4">
-         <div class="card shadow-sm border-0 h-100"><div class="card-body">
+         <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
                 <h5 class="card-title mb-3">Salud General de la Cartera</h5>
                 <div class="chart-container"><canvas id="portfolioHealthChart"></canvas></div>
-        </div></div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -143,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const dataSalud = {{ data_salud_cartera|safe }};
     if (dataSalud.length > 0) {
         new Chart(document.getElementById('portfolioHealthChart'), {
-            type: 'pie', data: { labels: {{ labels_salud_cartera|safe }}, datasets: [{ data: dataSalud, backgroundColor: ['#28a745', '#dc3545', '#0d6efd'] }] },
+            type: 'pie', data: { labels: {{ labels_salud_cartera|safe }}, datasets: [{ data: dataSalud, backgroundColor: ['#198754', '#dc3545', '#0d6efd'] }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
         });
     }

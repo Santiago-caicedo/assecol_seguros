@@ -6,39 +6,51 @@ from django.contrib.auth.models import User
 from datetime import date, timedelta
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
+from polizas.models import Vehiculo
+from siniestros.models import Siniestro
 
 class PerfilClienteView(LoginRequiredMixin, DetailView):
     model = User
-    template_name = 'usuarios/perfil.html' # Usaremos la misma plantilla
+    template_name = 'usuarios/perfil.html'
     context_object_name = 'cliente'
 
     def get_object(self, queryset=None):
+        """Asegura que el usuario solo pueda ver su propio perfil."""
         return self.request.user
 
     def get_context_data(self, **kwargs):
-        """Añadimos las estadísticas al contexto."""
+        """
+        Prepara todos los datos necesarios para el dashboard del cliente:
+        métricas, listas de pólizas, vehículos y siniestros.
+        """
         context = super().get_context_data(**kwargs)
+        cliente = self.object
 
-        polizas_cliente = self.object.polizas.all()
-
-        # --- LÍNEA CORREGIDA ---
-        # Métrica 1: Total de Pólizas Activas
-        # Cambiamos 'esta_activa=True' por 'estado="ACTIVA"'
+        # --- Métricas de Pólizas ---
+        polizas_cliente = cliente.polizas.all()
+        
         context['polizas_activas_count'] = polizas_cliente.filter(
             estado='ACTIVA'
         ).count()
 
-        # --- LÍNEA CORREGIDA ---
-        # Métrica 2: Pólizas que vencen pronto (en los próximos 60 días)
-        # Cambiamos 'esta_activa=True' por 'estado="ACTIVA"'
         fecha_limite = date.today() + timedelta(days=60)
         context['polizas_por_vencer_count'] = polizas_cliente.filter(
             estado='ACTIVA',
             fecha_fin__lte=fecha_limite,
-            fecha_fin__gte=date.today() # También es buena idea asegurar que no contamos las ya vencidas
+            fecha_fin__gte=date.today()
         ).count()
+        
+        
+        # --- Listas de Objetos para las Pestañas ---
 
+        # 1. Obtenemos la lista de vehículos del cliente
+        context['lista_vehiculos'] = Vehiculo.objects.filter(cliente=cliente)
+
+        # 2. Obtenemos la lista de siniestros asociados a las pólizas del cliente
+        context['lista_siniestros'] = Siniestro.objects.filter(poliza__cliente=cliente).order_by('-fecha_siniestro')
+        
         return context
+
 
 
 @login_required
