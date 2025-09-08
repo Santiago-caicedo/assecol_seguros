@@ -1,31 +1,25 @@
+# siniestros/models.py
 from django.db import models
 from polizas.models import Poliza
 
+# --- MODELOS NUEVOS Y REESTRUCTURADOS ---
+
+class TipoSiniestro(models.Model):
+    """ Las categorías principales: 'Responsabilidad Civil', 'Daños Propios' """
+    nombre = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.nombre
+
+class SubtipoSiniestro(models.Model):
+    """ Las opciones específicas: 'Solo Daños', 'Pérdida Parcial Hurto', etc. """
+    tipo = models.ForeignKey(TipoSiniestro, on_delete=models.CASCADE, related_name='subtipos')
+    nombre = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.tipo.nombre} - {self.nombre}"
+
 class Siniestro(models.Model):
-    # --- Opciones para los campos 'choices' ---
-    TIPO_SINIESTRO_CHOICES = [
-        ('RESPONSABILIDAD_CIVIL', 'Responsabilidad Civil Extracontractual'),
-        ('DANOS_PROPIOS', 'Daños Propios'),
-    ]
-
-    SUBTIPO_RC_CHOICES = [
-        ('SOLO_DANOS', 'Solo Daños'),
-        ('DANOS_LESIONES_1', 'Daños y Lesiones a 1 Persona'),
-        ('LESIONES_1', 'Lesiones a 1 Persona'),
-        ('LESIONES_2_MAS', 'Lesiones a 2 o más Personas'),
-        ('DANOS_MUERTE_1', 'Daños y Muerte a 1 Persona'),
-        ('DANOS_MUERTE_2_MAS', 'Daños y Muerte a 2 o más Personas'),
-        ('MUERTE_1', 'Muerte a 1 Persona'),
-        ('MUERTE_2_MAS', 'Muerte a 2 o más Personas'),
-    ]
-
-    SUBTIPO_DP_CHOICES = [
-        ('PERDIDA_PARCIAL_DANOS', 'Pérdida Parcial Daños'),
-        ('PERDIDA_PARCIAL_HURTO', 'Pérdida Parcial Hurto'),
-        ('PERDIDA_TOTAL_DANOS', 'Pérdida Total Daños'),
-        ('PERDIDA_TOTAL_HURTO', 'Pérdida Total Hurto'),
-    ]
-
     ESTADO_SINIESTRO_CHOICES = [
         ('NUEVO', 'Nuevo'),
         ('EN_PROCESO', 'En Proceso'),
@@ -33,33 +27,31 @@ class Siniestro(models.Model):
         ('CERRADO_A_FAVOR', 'Cerrado a Favor del Cliente'),
         ('CERRADO_EN_CONTRA', 'Cerrado en Contra del Cliente'),
     ]
-
+    
     # --- Campos del Modelo ---
     poliza = models.ForeignKey(Poliza, on_delete=models.CASCADE, related_name='siniestros')
     numero_siniestro = models.CharField("Número de Siniestro y Compañía", max_length=100)
     fecha_siniestro = models.DateField()
-
-    tipo_siniestro = models.CharField(max_length=30, choices=TIPO_SINIESTRO_CHOICES)
-    # Haremos los subtipos opcionales para flexibilidad
-    subtipo_rc = models.CharField("Subtipo (Resp. Civil)", max_length=30, choices=SUBTIPO_RC_CHOICES, blank=True, null=True)
-    subtipo_dp = models.CharField("Subtipo (Daños Propios)", max_length=30, choices=SUBTIPO_DP_CHOICES, blank=True, null=True)
+    
+    # 👇 CAMBIO CLAVE: Un siniestro ahora puede tener MUCHOS subtipos afectados 👇
+    subtipos_afectados = models.ManyToManyField(SubtipoSiniestro, related_name='siniestros')
 
     descripcion = models.TextField("Descripción del Siniestro")
     estado = models.CharField(max_length=30, choices=ESTADO_SINIESTRO_CHOICES, default='NUEVO')
-
-    # Campos para archivos
-    # Crearemos modelos separados para manejar múltiples documentos y fotos
-
+    
     class Meta:
         ordering = ['-fecha_siniestro']
 
     def __str__(self):
         return f"Siniestro #{self.numero_siniestro} para Póliza {self.poliza.numero_poliza}"
 
-# Modelos para manejar múltiples archivos por siniestro
+# --- MODELOS PARA ARCHIVOS (SIN CAMBIOS) ---
+
 def get_upload_path(instance, filename):
     """Genera una ruta de subida única para cada archivo."""
-    return f'siniestros/{instance.siniestro.id}/documentos/{filename}'
+    # Aseguramos que el siniestro tenga un ID antes de construir la ruta
+    siniestro_id = instance.siniestro.id if instance.siniestro and instance.siniestro.id else 'temp'
+    return f'siniestros/{siniestro_id}/documentos/{filename}'
 
 class DocumentoSiniestro(models.Model):
     siniestro = models.ForeignKey(Siniestro, on_delete=models.CASCADE, related_name='documentos')

@@ -19,7 +19,7 @@ import json
 from django.db.models.functions import TruncMonth
 from django.db.models import Count
 from cartera.models import Cuota, Pago
-from siniestros.models import Siniestro
+from siniestros.models import Siniestro, TipoSiniestro
 from .forms import SiniestroForm
 from siniestros.models import DocumentoSiniestro, FotoSiniestro
 
@@ -664,6 +664,9 @@ class SiniestroCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['titulo'] = 'Registrar Nuevo Siniestro'
+        # ESTA LÍNEA ES LA MÁS IMPORTANTE:
+        # Obtiene todos los Tipos de Siniestro y sus Subtipos asociados para pasarlos a la plantilla
+        context['tipos_con_subtipos'] = TipoSiniestro.objects.prefetch_related('subtipos').all()
         return context
 
 

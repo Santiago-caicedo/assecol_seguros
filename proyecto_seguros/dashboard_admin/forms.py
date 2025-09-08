@@ -2,7 +2,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from polizas.models import TipoSeguro, CompaniaAseguradora, Poliza, Vehiculo
-from siniestros.models import Siniestro
+from siniestros.models import Siniestro, SubtipoSiniestro
 from siniestros.models import DocumentoSiniestro, FotoSiniestro
 
 class ClientCreationForm(forms.ModelForm):
@@ -135,13 +135,19 @@ class VehiculoForm(forms.ModelForm):
 
 
 class SiniestroForm(forms.ModelForm):
+    # Le decimos a Django cómo debe manejar el campo de selección múltiple
+    subtipos_afectados = forms.ModelMultipleChoiceField(
+        queryset=SubtipoSiniestro.objects.all(),
+        widget=forms.CheckboxSelectMultiple, # Usará checkboxes
+        label="Coberturas Afectadas",
+        required=True
+    )
+
     class Meta:
         model = Siniestro
-        # Excluimos los campos de subtipo que manejaremos dinámicamente
-        # y los de estado que tienen valor por defecto.
         fields = [
             'poliza', 'numero_siniestro', 'fecha_siniestro', 
-            'tipo_siniestro', 'subtipo_rc', 'subtipo_dp', 'descripcion'
+            'descripcion', 'subtipos_afectados'
         ]
         widgets = {
             'fecha_siniestro': forms.DateInput(attrs={'type': 'date'}),
@@ -150,11 +156,11 @@ class SiniestroForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Aplicamos clases de Bootstrap y activamos Select2 para la póliza
-        self.fields['poliza'].widget.attrs.update({'class': 'form-control', 'id': 'select-poliza'})
-        # ... (resto de campos)
-        for field_name in ['numero_siniestro', 'fecha_siniestro', 'tipo_siniestro', 'subtipo_rc', 'subtipo_dp', 'descripcion']:
-            self.fields[field_name].widget.attrs.update({'class': 'form-control'})
+        # Aplicamos estilos y activamos Select2 para la póliza
+        self.fields['poliza'].widget.attrs.update({'class': 'form-control', 'id': 'id_poliza_siniestro'})
+        self.fields['numero_siniestro'].widget.attrs.update({'class': 'form-control'})
+        self.fields['fecha_siniestro'].widget.attrs.update({'class': 'form-control'})
+        self.fields['descripcion'].widget.attrs.update({'class': 'form-control'})
 
 
 
