@@ -371,16 +371,43 @@ class PolicyCancelView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         poliza.estado = 'CANCELADA'
         poliza.fecha_cancelacion = timezone.now().date()
 
-        # 👇 LÓGICA DE PRORRATEO AÑADIDA 👇
-        # Si la póliza es de contado, calculamos y guardamos la devolución
         if poliza.modo_pago == 'CONTADO':
             devolucion, comision_devuelta = poliza.calcular_prorrateo_cancelacion()
             if devolucion is not None:
                 poliza.monto_devolucion = devolucion
                 poliza.comision_devuelta = comision_devuelta
 
+                # --- INICIO DEPURACIÓN ---
+                print("\n" + "="*50)
+                print(f"INICIANDO AJUSTE DE PAGO por cancelación de Póliza #{poliza.numero_poliza}")
+
+                try:
+                    # Buscamos el registro de Pago original
+                    print("  - Buscando el registro de Pago asociado...")
+                    pago_a_modificar = Pago.objects.get(poliza=poliza, cuota__isnull=True)
+                    print(f"  - ¡Éxito! Se encontró el Pago con ID: {pago_a_modificar.id} y monto original: ${pago_a_modificar.monto_pagado}")
+
+                    # Calculamos la comisión que realmente se ganó
+                    comision_real_ganada = poliza.valor_comision - comision_devuelta
+                    print(f"  - Comisión total original: ${poliza.valor_comision}")
+                    print(f"  - Comisión a devolver: ${comision_devuelta}")
+                    print(f"  - Comisión NETA GANADA (a guardar): ${comision_real_ganada}")
+
+                    # Actualizamos el monto del pago
+                    pago_a_modificar.monto_pagado = comision_real_ganada
+                    pago_a_modificar.save()
+
+                    print(f"  - ¡Éxito! El Pago ha sido actualizado en la base de datos.")
+
+                except Pago.DoesNotExist:
+                    print(f"  - ERROR CRÍTICO: No se encontró un registro de Pago para ajustar.")
+                except Exception as e:
+                    print(f"  - ERROR INESPERADO al ajustar el pago: {e}")
+
+                print("="*50 + "\n")
+                # --- FIN DEPURACIÓN ---
+
         poliza.save()
-        # El form.save() original ahora se llama desde el super()
         return super().form_valid(form)
 
     def get_success_url(self):

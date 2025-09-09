@@ -58,45 +58,40 @@ def actualizar_recordatorio_soat(sender, instance, **kwargs):
 @receiver(post_save, sender=Poliza)
 def crear_pago_para_contado_y_credito(sender, instance, created, **kwargs):
     """
-    Si una póliza es NUEVA y de Contado/Crédito, crea el registro de Pago por el valor de la COMISIÓN.
-    Si se ACTUALIZA, recalcula el monto del Pago si la prima (y por tanto la comisión) cambió.
+    Si una póliza es NUEVA y de Contado/Crédito, crea el registro de Pago.
+    Si se ACTUALIZA y sigue ACTIVA, recalcula el monto del Pago si la prima cambió.
     """
     if instance.modo_pago in ['CONTADO', 'CREDITO']:
-        # Se calcula el valor de la comisión actual de la póliza
         comision_actual = instance.valor_comision
 
         if created:
-            # --- Lógica de Creación ---
+            # --- Lógica de Creación (sin cambios) ---
             if comision_actual and comision_actual > 0:
                 Pago.objects.create(
                     poliza=instance,
                     fecha_pago=instance.fecha_inicio,
-                    monto_pagado=comision_actual,  # <-- CORRECCIÓN: Usamos la comisión
+                    monto_pagado=comision_actual,
                     estado_comision='PENDIENTE',
                     notas='Registro de comisión generado automáticamente al crear la póliza.'
                 )
-                print(f"--- Registro de Pago/Comisión CREADO para Póliza #{instance.numero_poliza} por valor de {comision_actual} ---")
         else:
-            # --- Lógica de Actualización (Preservada y Corregida) ---
-            try:
-                # Buscamos el registro de Pago único asociado a esta póliza
-                pago_existente = Pago.objects.get(poliza=instance, cuota__isnull=True)
-
-                # Comparamos si el valor de la comisión guardado es diferente al nuevo
-                if pago_existente.monto_pagado != comision_actual:
-                    pago_existente.monto_pagado = comision_actual # <-- CORRECCIÓN: Actualizamos con la nueva comisión
-                    pago_existente.save()
-                    print(f"--- Registro de Pago/Comisión ACTUALIZADO para Póliza #{instance.numero_poliza} a nuevo valor de {comision_actual} ---")
-
-            except Pago.DoesNotExist:
-                # Si se edita una póliza antigua que no tuvo pago automático, lo creamos ahora
-                if comision_actual and comision_actual > 0:
-                     Pago.objects.create(
-                        poliza=instance,
-                        fecha_pago=instance.fecha_inicio,
-                        monto_pagado=comision_actual, # <-- CORRECCIÓN: Usamos la comisión
-                        estado_comision='PENDIENTE',
-                        notas='Registro de comisión generado al actualizar póliza.'
-                    )
-            except Exception as e:
-                print(f"Error al actualizar el pago para la póliza #{instance.numero_poliza}: {e}")
+            # --- Lógica de Actualización MEJORADA ---
+            # 👇 AÑADIMOS ESTA CONDICIÓN CRÍTICA 👇
+            if instance.estado == 'ACTIVA':
+                try:
+                    pago_existente = Pago.objects.get(poliza=instance, cuota__isnull=True)
+                    if pago_existente.monto_pagado != comision_actual:
+                        pago_existente.monto_pagado = comision_actual
+                        pago_existente.save()
+                except Pago.DoesNotExist:
+                    # Si no existe, lo creamos (caso borde)
+                    if comision_actual and comision_actual > 0:
+                         Pago.objects.create(
+                            poliza=instance,
+                            fecha_pago=instance.fecha_inicio,
+                            monto_pagado=comision_actual,
+                            estado_comision='PENDIENTE',
+                            notas='Registro de comisión generado al actualizar póliza.'
+                        )
+                except Exception as e:
+                    print(f"Error al actualizar el pago para la póliza #{instance.numero_poliza}: {e}")
