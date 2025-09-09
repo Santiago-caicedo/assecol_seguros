@@ -129,28 +129,26 @@ class Poliza(models.Model):
         para pólizas pagadas de contado.
         """
         if not self.modo_pago == 'CONTADO' or not self.fecha_cancelacion:
-            return None, None # No aplica si no es de contado o no está cancelada
+            return None, None
 
-        # 1. Calcular días totales y días activos
         dias_totales_poliza = (self.fecha_fin - self.fecha_inicio).days
         if dias_totales_poliza <= 0:
             return 0, 0
 
         dias_activos = (self.fecha_cancelacion - self.fecha_inicio).days
 
-        # 2. Calcular costo diario
-        costo_diario_prima = self.prima_total / dias_totales_poliza
+        # 👇 CAMBIOS CLAVE AQUÍ 👇
+        # Usamos 'valor_prima_sin_iva' en lugar de 'prima_total'
+        costo_diario_prima = self.valor_prima_sin_iva / dias_totales_poliza
         costo_diario_comision = self.valor_comision / dias_totales_poliza
 
-        # 3. Calcular montos consumidos
         prima_consumida = costo_diario_prima * dias_activos
         comision_ganada = costo_diario_comision * dias_activos
 
-        # 4. Calcular montos a devolver
-        monto_a_devolver_cliente = self.prima_total - prima_consumida
+        # Y aquí también usamos 'valor_prima_sin_iva' como base del cálculo
+        monto_a_devolver_cliente = self.valor_prima_sin_iva - prima_consumida
         comision_a_devolver_assecol = self.valor_comision - comision_ganada
 
-        # Redondeamos a 2 decimales para evitar problemas
         return round(monto_a_devolver_cliente, 2), round(comision_a_devolver_assecol, 2)
     
 
