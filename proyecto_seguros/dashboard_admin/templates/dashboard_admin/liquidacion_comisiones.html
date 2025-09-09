@@ -87,38 +87,26 @@
                 </thead>
                 <tbody>
                 {% for pago in pagos_list %}
-                    <tr>
+                    {# Añadimos una clase a la fila si la póliza está cancelada #}
+                    <tr {% if pago.poliza.estado == 'CANCELADA' %}class="table-light text-muted"{% endif %}>
                         <td>{{ pago.fecha_pago|date:"d M, Y" }}</td>
                         <td>{{ pago.poliza.cliente.get_full_name }}</td>
                         <td>{{ pago.poliza.numero_poliza }}</td>
                         <td>{{ pago.poliza.compania_aseguradora.nombre }}</td>
-
-                        {# Este es el valor total de la póliza, como referencia #}
-                        <td>${{ pago.poliza.prima_total|floatformat:0|intcomma }}</td> 
-
-                        {# Este es el valor de la comisión que se liquidó en este pago #}
-                        <td class="fw-bold">${{ pago.monto_pagado|floatformat:0|intcomma }}</td> 
-
+                        <td>${{ pago.poliza.valor_prima_sin_iva|floatformat:0|intcomma }}</td>
+                        <td class="fw-bold">${{ pago.monto_pagado|floatformat:0|intcomma }}</td>
                         <td>
-                            {% if pago.estado_comision == 'LIQUIDADA' %}
+                            {# El estado ahora refleja si la póliza fue cancelada #}
+                            {% if pago.poliza.estado == 'CANCELADA' %}
+                                <span class="badge text-bg-secondary">Cancelada</span>
+                            {% elif pago.estado_comision == 'LIQUIDADA' %}
                                 <span class="badge text-bg-success">Liquidada</span>
                             {% else %}
                                 <span class="badge text-bg-warning">Pendiente</span>
                             {% endif %}
                         </td>
                         <td class="text-end">
-                            {% if pago.estado_comision == 'PENDIENTE' %}
-                            <form action="{% url 'dashboard_admin:marcar_comision_liquidada' pk=pago.pk %}" method="post" class="d-inline">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-success btn-sm">Marcar Liquidada</button>
-                            </form>
-                            {% elif pago.estado_comision == 'LIQUIDADA' %}
-                            <form action="{% url 'dashboard_admin:desmarcar_comision_liquidada' pk=pago.pk %}" method="post" class="d-inline">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-outline-secondary btn-sm" title="Revertir a Pendiente">Anular</button>
-                            </form>
-                            {% endif %}
-                        </td>
+                            </td>
                     </tr>
                 {% empty %}
                     <tr><td colspan="8" class="text-center p-4">No hay pagos que coincidan con los filtros.</td></tr>

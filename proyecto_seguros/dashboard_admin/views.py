@@ -14,6 +14,9 @@ from .forms import CancelPolicyForm, DocumentoSiniestroForm, FotoSiniestroForm, 
 from .forms import ClientCreationForm, ClientUpdateForm, TipoSeguroForm, CompaniaAseguradoraForm
 from datetime import date, datetime, timedelta
 from django.utils import timezone
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
+from django.conf import settings
 from django.db.models import Sum, Q
 import json
 from django.db.models.functions import TruncMonth
@@ -377,37 +380,47 @@ class PolicyCancelView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
                 poliza.monto_devolucion = devolucion
                 poliza.comision_devuelta = comision_devuelta
 
-                # --- INICIO DEPURACIÓN ---
-                print("\n" + "="*50)
-                print(f"INICIANDO AJUSTE DE PAGO por cancelación de Póliza #{poliza.numero_poliza}")
-
                 try:
                     # Buscamos el registro de Pago original
-                    print("  - Buscando el registro de Pago asociado...")
                     pago_a_modificar = Pago.objects.get(poliza=poliza, cuota__isnull=True)
-                    print(f"  - ¡Éxito! Se encontró el Pago con ID: {pago_a_modificar.id} y monto original: ${pago_a_modificar.monto_pagado}")
-
+                    
                     # Calculamos la comisión que realmente se ganó
                     comision_real_ganada = poliza.valor_comision - comision_devuelta
-                    print(f"  - Comisión total original: ${poliza.valor_comision}")
-                    print(f"  - Comisión a devolver: ${comision_devuelta}")
-                    print(f"  - Comisión NETA GANADA (a guardar): ${comision_real_ganada}")
-
-                    # Actualizamos el monto del pago
+                    
+                    # Actualizamos el monto del pago para que refleje la comisión real
                     pago_a_modificar.monto_pagado = comision_real_ganada
                     pago_a_modificar.save()
 
-                    print(f"  - ¡Éxito! El Pago ha sido actualizado en la base de datos.")
-
                 except Pago.DoesNotExist:
-                    print(f"  - ERROR CRÍTICO: No se encontró un registro de Pago para ajustar.")
+                    print(f"ADVERTENCIA: No se encontró un registro de Pago para ajustar para la Póliza #{poliza.numero_poliza}.")
                 except Exception as e:
-                    print(f"  - ERROR INESPERADO al ajustar el pago: {e}")
+                    print(f"ERROR al ajustar el pago tras la cancelación: {e}")
 
-                print("="*50 + "\n")
-                # --- FIN DEPURACIÓN ---
-
+        # Guardamos la póliza con todos los cambios (estado, fecha, montos de devolución)
         poliza.save()
+        
+        # --- LÓGICA DE ENVÍO DE CORREOS DE CANCELACIÓN ---
+        try:
+            # Preparamos el contexto para las plantillas
+            contexto_email = {'poliza': poliza}
+
+            # Correo para el Cliente
+            cuerpo_html_cliente = render_to_string('emails/cancelacion_poliza_cliente.html', contexto_email)
+            asunto_cliente = f"Confirmación de Cancelación de tu Póliza #{poliza.numero_poliza}"
+            email_cliente = EmailMessage(asunto_cliente, cuerpo_html_cliente, settings.DEFAULT_FROM_EMAIL, [poliza.cliente.email])
+            email_cliente.content_subtype = "html"
+            email_cliente.send()
+
+            # Correo para el Admin
+            cuerpo_html_admin = render_to_string('emails/cancelacion_poliza_admin.html', contexto_email)
+            asunto_admin = f"Notificación: Póliza Cancelada - {poliza.cliente.get_full_name()}"
+            email_admin = EmailMessage(asunto_admin, cuerpo_html_admin, settings.DEFAULT_FROM_EMAIL, [settings.ADMIN_EMAIL])
+            email_admin.content_subtype = "html"
+            email_admin.send()
+        except Exception as e:
+            print(f"ERROR al enviar correos de notificación de cancelación: {e}")
+
+        # El super().form_valid() llama al .save() del formulario original
         return super().form_valid(form)
 
     def get_success_url(self):
