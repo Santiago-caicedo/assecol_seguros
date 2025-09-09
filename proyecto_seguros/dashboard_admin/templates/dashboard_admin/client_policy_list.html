@@ -87,11 +87,11 @@
                         {% endif %}
                     </div>
                     <div>
-                        {# Solo mostramos el botón de Cancelar si la póliza está ACTIVA #}
+                        {# Los botones de acción solo aparecen si la póliza está ACTIVA #}
                         {% if poliza.estado == 'ACTIVA' %}
                             <a href="{% url 'dashboard_admin:cancelar_poliza' pk=poliza.pk %}" class="btn btn-outline-danger btn-sm">Cancelar</a>
+                            <a href="{% url 'dashboard_admin:editar_poliza' pk=poliza.pk %}" class="btn btn-outline-secondary btn-sm">Editar</a>
                         {% endif %}
-                        <a href="{% url 'dashboard_admin:editar_poliza' pk=poliza.pk %}" class="btn btn-outline-secondary btn-sm">Editar</a>
                     </div>
                 </div>
             </div>

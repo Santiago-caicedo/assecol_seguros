@@ -1,5 +1,6 @@
 # dashboard_admin/views.py
 
+from django.http import Http404
 from django.shortcuts import render
 from django.views.generic import ListView,  CreateView, UpdateView, UpdateView, DeleteView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -212,6 +213,17 @@ class PolicyUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     template_name = 'dashboard_admin/policy_form.html'
     context_object_name = 'poliza'
 
+     # 👇 AÑADE ESTE MÉTODO DE VERIFICACIÓN 👇
+    def get_object(self, queryset=None):
+        """
+        Sobrescribimos este método para asegurarnos de que solo se puedan
+        editar pólizas que estén activas.
+        """
+        obj = super().get_object(queryset)
+        if obj.estado != 'ACTIVA':
+            raise Http404("No se puede editar una póliza que no está activa.")
+        return obj
+
     def test_func(self):
         """Misma prueba de seguridad: solo para administradores."""
         return self.request.user.is_staff
@@ -344,6 +356,16 @@ class PolicyCancelView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     form_class = CancelPolicyForm
     template_name = 'dashboard_admin/policy_confirm_cancel.html'
     context_object_name = 'poliza'
+
+
+    def get_object(self, queryset=None):
+        """
+        Asegura que solo se puedan cancelar pólizas activas.
+        """
+        obj = super().get_object(queryset)
+        if obj.estado != 'ACTIVA':
+            raise Http404("Esta póliza no se puede cancelar porque no está activa.")
+        return obj
 
     def test_func(self):
         return self.request.user.is_staff
