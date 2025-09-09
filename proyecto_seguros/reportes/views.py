@@ -32,12 +32,32 @@ def panel_reportes_view(request):
         fecha_pago__month=mes_actual
     ).select_related('poliza__tipo_seguro')
     
-    total_comisiones_mes = sum(pago.monto_pagado * (pago.poliza.tipo_seguro.comision_porcentaje / 100) for pago in pagos_del_mes)
+    total_comisiones_mes = 0
+    print("\n" + "="*50)
+    print(f"INICIANDO CÁLCULO DE COMISIONES PARA {mes_actual}/{ano_actual}")
+    print(f"Se encontraron {pagos_del_mes.count()} pagos en este mes.")
+
+    for pago in pagos_del_mes:
+        try:
+            monto_base = pago.monto_pagado
+            porcentaje = pago.poliza.tipo_seguro.comision_porcentaje
+            comision_calculada = monto_base * (porcentaje / 100)
+            total_comisiones_mes += comision_calculada
+
+            print(f"\n  -> Revisando Pago ID: {pago.id} para Póliza #{pago.poliza.numero_poliza}:")
+            print(f"     - Monto Pagado (Base de Cálculo): ${monto_base}")
+            print(f"     - Porcentaje de Comisión del Tipo de Seguro: {porcentaje}%")
+            print(f"     - Comisión Calculada para este pago: ${comision_calculada}")
+        except Exception as e:
+            print(f"  -> ERROR al procesar Pago ID: {pago.id}. Detalles: {e}")
+
+    print("\n--- TOTAL FINAL DE COMISIONES CALCULADO:", total_comisiones_mes, "---")
+    print("="*50 + "\n")
     
     total_ventas_mes = Poliza.objects.filter(
         fecha_inicio__year=ano_actual,
         fecha_inicio__month=mes_actual
-    ).aggregate(total=Sum('prima_total'))['total'] or 0
+    ).aggregate(total=Sum('valor_prima_sin_iva'))['total'] or 0
 
     nuevas_polizas_mes = Poliza.objects.filter(
         fecha_inicio__year=ano_actual,
@@ -47,7 +67,11 @@ def panel_reportes_view(request):
     # --- 3. Análisis de Crecimiento Mes a Mes (MoM) ---
     fecha_mes_anterior = fecha_seleccionada - relativedelta(months=1)
     pagos_mes_anterior = Pago.objects.filter(fecha_pago__year=fecha_mes_anterior.year, fecha_pago__month=fecha_mes_anterior.month).select_related('poliza__tipo_seguro')
-    comisiones_mes_anterior = sum(pago.monto_pagado * (pago.poliza.tipo_seguro.comision_porcentaje / 100) for pago in pagos_mes_anterior)
+    comisiones_mes_anterior = Pago.objects.filter(
+        fecha_pago__year=fecha_mes_anterior.year,
+        fecha_pago__month=fecha_mes_anterior.month
+    ).aggregate(total=Sum('monto_pagado'))['total'] or 0
+
     comision_mom_change = 0
     if comisiones_mes_anterior > 0:
         comision_mom_change = ((total_comisiones_mes - comisiones_mes_anterior) / comisiones_mes_anterior) * 100
@@ -63,7 +87,7 @@ def panel_reportes_view(request):
         fecha_inicio__year=ano_actual,
         fecha_inicio__month=mes_actual
     ).values('tipo_seguro__nombre') \
-     .annotate(total_vendido=Sum('prima_total')) \
+     .annotate(total_vendido=Sum('valor_prima_sin_iva')) \
      .order_by('-total_vendido')
     labels_grafico_tipos = [item['tipo_seguro__nombre'] for item in ventas_por_tipo]
     data_grafico_tipos = [float(item['total_vendido']) for item in ventas_por_tipo]
@@ -82,17 +106,16 @@ def panel_reportes_view(request):
     
     # --- 5. NUEVO: Análisis Avanzados ---
     # Análisis 1: Rendimiento por Compañía Aseguradora
-    comisiones_por_compania = Poliza.objects.filter(pagos__fecha_pago__year=ano_actual, pagos__fecha_pago__month=mes_actual) \
-        .annotate(compania_nombre=F('compania_aseguradora__nombre')) \
-        .values('compania_nombre') \
-        .annotate(total_comision=Sum(F('pagos__monto_pagado') * (F('tipo_seguro__comision_porcentaje') / 100))) \
-        .order_by('-total_comision')
-    labels_companias = [item['compania_nombre'] for item in comisiones_por_compania]
+    comisiones_por_compania = Pago.objects.filter(fecha_pago__year=ano_actual, fecha_pago__month=mes_actual) \
+        .values('poliza__compania_aseguradora__nombre') \
+        .annotate(total_comision=Sum('monto_pagado')) \
+        .order_by('-total_comision') # <--- CAMBIO AQUÍ
+    labels_companias = [item['poliza__compania_aseguradora__nombre'] for item in comisiones_por_compania]
     data_companias = [float(item['total_comision']) for item in comisiones_por_compania]
 
     # Análisis 2: Top 5 Clientes
     top_clientes_qs = User.objects.filter(is_staff=False, polizas__pagos__fecha_pago__year=ano_actual, polizas__pagos__fecha_pago__month=mes_actual) \
-        .annotate(total_comision_generada=Sum(F('polizas__pagos__monto_pagado') * (F('polizas__tipo_seguro__comision_porcentaje') / 100))) \
+        .annotate(total_comision_generada=Sum('polizas__pagos__monto_pagado')) \
         .order_by('-total_comision_generada')[:5]
     top_clientes_list = [{'nombre': c.get_full_name() or c.username, 'comision': round(c.total_comision_generada or 0, 2)} for c in top_clientes_qs]
 

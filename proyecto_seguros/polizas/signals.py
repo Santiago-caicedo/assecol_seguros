@@ -59,20 +59,16 @@ def actualizar_recordatorio_soat(sender, instance, **kwargs):
 def crear_pago_para_contado_y_credito(sender, instance, created, **kwargs):
     """
     Si una póliza es NUEVA y su modo de pago es CONTADO o CREDITO,
-    crea automáticamente un registro de Pago por el valor total de la comisión,
-    marcado como pendiente de liquidar.
+    crea un registro de Pago por el valor de la PRIMA SIN IVA.
     """
-    # Solo se ejecuta al crear una póliza nueva
     if created and instance.modo_pago in ['CONTADO', 'CREDITO']:
-        # Verificamos que el valor de la comisión sea mayor a cero
-        if instance.valor_comision and instance.valor_comision > 0:
+        if instance.valor_prima_sin_iva and instance.valor_prima_sin_iva > 0:
             Pago.objects.create(
                 poliza=instance,
-                # Usamos la fecha de inicio de la póliza como fecha de referencia del "pago"
                 fecha_pago=instance.fecha_inicio,
-                # El monto "pagado" es el valor total de la comisión que se debe liquidar
-                monto_pagado=instance.valor_comision,
+                # 👇 LA LÍNEA MÁS IMPORTANTE Y CORREGIDA 👇
+                # Guardamos la prima sin IVA como base para futuros cálculos.
+                monto_pagado=instance.valor_prima_sin_iva,
                 estado_comision='PENDIENTE',
-                notas='Registro de comisión generado automáticamente al crear la póliza.'
+                notas='Registro de pago (base de comisión) generado automáticamente.'
             )
-            print(f"--- Registro de Pago/Comisión creado para Póliza #{instance.numero_poliza} ---")

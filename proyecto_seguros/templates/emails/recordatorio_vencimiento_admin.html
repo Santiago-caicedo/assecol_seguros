@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Alerta de Vencimiento de Póliza</h1>
+            <h2>(Copia para Administrador)</h2>
+        </div>
+        <div class="content">
+            <p>Hola Administrador,</p>
+            <p>Este es un recordatorio de que la póliza del cliente <strong>{{ poliza.cliente.get_full_name }}</strong> está próxima a vencer.</p>
+            <hr>
+            <p><strong>Detalles de la Póliza:</strong></p>
+            <ul>
+                <li><strong>Cliente:</strong> {{ poliza.cliente.get_full_name }} ({{ poliza.cliente.email }})</li>
+                <li><strong>Tipo de Seguro:</strong> {{ poliza.tipo_seguro.nombre }}</li>
+                <li><strong>Número de Póliza:</strong> {{ poliza.numero_poliza }}</li>
+
+                {% if poliza.vehiculo %}
+                <li><strong>Vehículo (Placa):</strong> {{ poliza.vehiculo.placa }}</li>
+                {% endif %}
+
+                <li><strong>Fecha de Vencimiento:</strong> {{ poliza.fecha_fin|date:"d \d\e F \d\e Y" }}</li>
+            </ul>
+            <p>Por favor, contacta al cliente para gestionar su renovación.</p>
+        </div>
+        <div class="footer">
+            <p>Este es un correo electrónico generado automáticamente por el sistema CRM.</p>
+        </div>
+    </div>
+</body>
+</html>

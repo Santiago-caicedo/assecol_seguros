@@ -76,7 +76,8 @@ class ClientUpdateForm(forms.ModelForm):
 class TipoSeguroForm(forms.ModelForm):
     class Meta:
         model = TipoSeguro
-        fields = ('nombre', 'descripcion', 'comision_porcentaje')
+        fields = ('nombre', 'descripcion', 'comision_porcentaje', 'porcentaje_iva')
+
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -84,6 +85,7 @@ class TipoSeguroForm(forms.ModelForm):
         self.fields['nombre'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Ej: Seguro de Vida'})
         self.fields['descripcion'].widget.attrs.update({'class': 'form-control', 'rows': 4, 'placeholder': 'Describe brevemente en qué consiste este tipo de seguro.'})
         self.fields['comision_porcentaje'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Ej: 15.00'})
+        self.fields['porcentaje_iva'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Ej: 19.00'})
 
 
 class CompaniaAseguradoraForm(forms.ModelForm):

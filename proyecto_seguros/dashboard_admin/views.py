@@ -412,29 +412,24 @@ class CarteraGeneralView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         return queryset
 
     def get_context_data(self, **kwargs):
-        # Obtenemos el contexto base de la ListView
         context = super().get_context_data(**kwargs)
-        
-        # Obtenemos el queryset de pólizas (ya filtrado si aplica)
-        queryset_filtrado = context['polizas']
 
-        # Calculamos las métricas basadas en las pólizas filtradas
-        total_ventas = queryset_filtrado.aggregate(total=Sum('prima_total'))['total'] or 0
-        total_comisiones = sum(p.valor_comision for p in queryset_filtrado if p.valor_comision is not None)
+        queryset = self.get_queryset()
 
-        # Obtenemos las pólizas en mora (esto siempre es sobre todas las pólizas, no solo las filtradas)
+        # CAMBIO CLAVE: Sumamos 'valor_prima_sin_iva' en lugar de 'prima_total'
+        total_ventas = queryset.aggregate(total=Sum('valor_prima_sin_iva'))['total'] or 0
+
+        # El cálculo de comisiones usa la @property del modelo, que ya está actualizada
+        total_comisiones = sum(p.valor_comision for p in queryset)
+
         polizas_en_mora = Poliza.objects.filter(estado_cartera='EN_MORA')
 
-        # --- ESTA ES LA PARTE IMPORTANTE ---
-        # Pasamos la lista COMPLETA de clientes para el menú desplegable
-        context['todos_los_clientes'] = User.objects.filter(is_staff=False).order_by('first_name')
-        
-        # Añadimos las métricas y datos adicionales al contexto
         context['total_ventas'] = total_ventas
         context['total_comisiones'] = total_comisiones
         context['polizas_en_mora'] = polizas_en_mora
+        context['todos_los_clientes'] = User.objects.filter(is_staff=False)
         context['cliente_seleccionado'] = self.request.GET.get('cliente')
-        
+
         return context
 
 

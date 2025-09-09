@@ -7,6 +7,7 @@ class TipoSeguro(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
     descripcion = models.TextField(blank=True)
     comision_porcentaje = models.DecimalField('Porcentaje de Comisión (%)', max_digits=5, decimal_places=2, default=10.0)
+    porcentaje_iva = models.DecimalField('Porcentaje de IVA (%)', max_digits=5, decimal_places=2, default=19.00, help_text="Ej: 19.00 para 19%")
 
     def __str__(self):
         return self.nombre
@@ -75,8 +76,7 @@ class Poliza(models.Model):
     poliza_pdf = models.FileField(upload_to='polizas_pdf/', blank=True, null=True)
 
     # --- Campos Financieros y de Comisión ---
-    prima_total = models.DecimalField('Valor Prima Total', max_digits=12, decimal_places=2)
-
+    valor_prima_sin_iva = models.DecimalField('Valor Prima sin IVA', max_digits=12, decimal_places=2)
     #---Se relaciona con un vehiculo solo si la poliza es d+para un vehiculo
     vehiculo = models.ForeignKey(Vehiculo, on_delete=models.SET_NULL, null=True, blank=True, related_name='polizas', help_text="Opcional: Llenar solo si la póliza es para un vehículo.")
 
@@ -92,7 +92,8 @@ class Poliza(models.Model):
 
     monto_devolucion = models.DecimalField('Monto a Devolver', max_digits=12, decimal_places=2, null=True, blank=True, help_text="Calculado al momento de la cancelación.")
     comision_devuelta = models.DecimalField('Comisión a Devolver', max_digits=12, decimal_places=2, null=True, blank=True, help_text="Comisión que Assecol retorna, calculada al cancelar.")
-
+    
+    
     class Meta:
         ordering = ['-fecha_fin']
 
@@ -100,10 +101,25 @@ class Poliza(models.Model):
         return f"Póliza {self.numero_poliza} - {self.cliente.username}"
 
     @property
+    def valor_iva(self):
+        """Calcula el valor del IVA basado en la prima y el % del Tipo de Seguro."""
+        if self.valor_prima_sin_iva and self.tipo_seguro.porcentaje_iva:
+            return (self.valor_prima_sin_iva * self.tipo_seguro.porcentaje_iva) / 100
+        return 0
+
+    @property
+    def valor_total_a_pagar(self):
+        """Calcula el valor final que el cliente debe pagar (Prima + IVA)."""
+        return self.valor_prima_sin_iva + self.valor_iva
+
+    @property
     def valor_comision(self):
-        """Calcula el valor de la comisión buscando el % en el Tipo de Seguro."""
-        if self.prima_total and self.tipo_seguro.comision_porcentaje:
-            return (self.prima_total * self.tipo_seguro.comision_porcentaje) / 100
+        """
+        Calcula el valor de la comisión.
+        IMPORTANTE: Ahora se basa en el valor de la prima SIN IVA.
+        """
+        if self.valor_prima_sin_iva and self.tipo_seguro.comision_porcentaje:
+            return (self.valor_prima_sin_iva * self.tipo_seguro.comision_porcentaje) / 100
         return 0
     
 

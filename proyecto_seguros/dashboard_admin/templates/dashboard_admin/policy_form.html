@@ -7,81 +7,37 @@
     <div class="card-body p-4">
         <form method="post" enctype="multipart/form-data" novalidate>
             {% csrf_token %}
-
-            {% if form.non_field_errors %}
-                <div class="alert alert-danger">
-                    {% for error in form.non_field_errors %}{{ error }}{% endfor %}
-                </div>
-            {% endif %}
+            
+            {% if form.non_field_errors %}<div class="alert alert-danger">{% for error in form.non_field_errors %}{{ error }}{% endfor %}</div>{% endif %}
 
             <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="{{ form.numero_poliza.id_for_label }}" class="form-label">Número de Póliza</label>
-                    {{ form.numero_poliza }}
-                    {% if form.numero_poliza.errors %}<div class="text-danger small mt-1">{{ form.numero_poliza.errors|striptags }}</div>{% endif %}
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="{{ form.compania_aseguradora.id_for_label }}" class="form-label">Compañía Aseguradora</label>
-                    {{ form.compania_aseguradora }}
-                    {% if form.compania_aseguradora.errors %}<div class="text-danger small mt-1">{{ form.compania_aseguradora.errors|striptags }}</div>{% endif %}
-                </div>
+                <div class="col-md-6 mb-3"><label for="{{ form.numero_poliza.id_for_label }}" class="form-label">Número de Póliza</label>{{ form.numero_poliza }}{% if form.numero_poliza.errors %}<div class="text-danger small mt-1">{{ form.numero_poliza.errors|striptags }}</div>{% endif %}</div>
+                <div class="col-md-6 mb-3"><label for="{{ form.compania_aseguradora.id_for_label }}" class="form-label">Compañía Aseguradora</label>{{ form.compania_aseguradora }}{% if form.compania_aseguradora.errors %}<div class="text-danger small mt-1">{{ form.compania_aseguradora.errors|striptags }}</div>{% endif %}</div>
             </div>
 
             <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="{{ form.tipo_seguro.id_for_label }}" class="form-label">Tipo de Seguro</label>
-                    {{ form.tipo_seguro }}
-                    {% if form.tipo_seguro.errors %}<div class="text-danger small mt-1">{{ form.tipo_seguro.errors|striptags }}</div>{% endif %}
-                </div>
-                
-                <div class="col-md-6 mb-3" id="vehiculo-container" style="display: none;">
-                    <label for="{{ form.vehiculo.id_for_label }}" class="form-label">Vehículo (Placa)</label>
-                    {{ form.vehiculo }}
-                    <div class="form-text">Selecciona el vehículo asociado a esta póliza.</div>
-                    {% if form.vehiculo.errors %}<div class="text-danger small mt-1">{{ form.vehiculo.errors|striptags }}</div>{% endif %}
-                </div>
+                <div class="col-md-6 mb-3"><label for="{{ form.tipo_seguro.id_for_label }}" class="form-label">Tipo de Seguro</label>{{ form.tipo_seguro }}{% if form.tipo_seguro.errors %}<div class="text-danger small mt-1">{{ form.tipo_seguro.errors|striptags }}</div>{% endif %}</div>
+                <div class="col-md-6 mb-3" id="vehiculo-container" style="display: none;"><label for="{{ form.vehiculo.id_for_label }}" class="form-label">Vehículo (Placa)</label>{{ form.vehiculo }}<div class="form-text">Selecciona el vehículo asociado a esta póliza.</div>{% if form.vehiculo.errors %}<div class="text-danger small mt-1">{{ form.vehiculo.errors|striptags }}</div>{% endif %}</div>
             </div>
             
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="{{ form.prima_total.id_for_label }}" class="form-label">Valor Prima Total</label>
-                    {{ form.prima_total }}
-                    {% if form.prima_total.errors %}<div class="text-danger small mt-1">{{ form.prima_total.errors|striptags }}</div>{% endif %}
+                    <label for="{{ form.valor_prima_sin_iva.id_for_label }}" class="form-label fw-bold">Valor Prima sin IVA</label>
+                    {{ form.valor_prima_sin_iva }}
+                    {% if form.valor_prima_sin_iva.errors %}<div class="text-danger small mt-1">{{ form.valor_prima_sin_iva.errors|striptags }}</div>{% endif %}
                 </div>
             </div>
 
             <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="{{ form.fecha_inicio.id_for_label }}" class="form-label">Fecha de Inicio</label>
-                    {{ form.fecha_inicio }}
-                    {% if form.fecha_inicio.errors %}<div class="text-danger small mt-1">{{ form.fecha_inicio.errors|striptags }}</div>{% endif %}
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="{{ form.fecha_fin.id_for_label }}" class="form-label">Fecha de Fin</label>
-                    {{ form.fecha_fin }}
-                    {% if form.fecha_fin.errors %}<div class="text-danger small mt-1">{{ form.fecha_fin.errors|striptags }}</div>{% endif %}
-                </div>
+                <div class="col-md-6 mb-3"><label for="{{ form.fecha_inicio.id_for_label }}" class="form-label">Fecha de Inicio</label>{{ form.fecha_inicio }}{% if form.fecha_inicio.errors %}<div class="text-danger small mt-1">{{ form.fecha_inicio.errors|striptags }}</div>{% endif %}</div>
+                <div class="col-md-6 mb-3"><label for="{{ form.fecha_fin.id_for_label }}" class="form-label">Fecha de Fin</label>{{ form.fecha_fin }}{% if form.fecha_fin.errors %}<div class="text-danger small mt-1">{{ form.fecha_fin.errors|striptags }}</div>{% endif %}</div>
             </div>
 
-            <div class="mb-3">
-                <label for="{{ form.poliza_pdf.id_for_label }}" class="form-label">Documento de la Póliza (PDF)</label>
-                {{ form.poliza_pdf }}
-                {% if form.poliza_pdf.errors %}<div class="text-danger small mt-1">{{ form.poliza_pdf.errors|striptags }}</div>{% endif %}
-            </div>
-
+            <div class="mb-3"><label for="{{ form.poliza_pdf.id_for_label }}" class="form-label">Documento de la Póliza (PDF)</label>{{ form.poliza_pdf }}{% if form.poliza_pdf.errors %}<div class="text-danger small mt-1">{{ form.poliza_pdf.errors|striptags }}</div>{% endif %}</div>
             <hr class="my-4">
-
             <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="{{ form.modo_pago.id_for_label }}" class="form-label">Modalidad de Pago</label>
-                    {{ form.modo_pago }}
-                    {% if form.modo_pago.errors %}<div class="text-danger small mt-1">{{ form.modo_pago.errors|striptags }}</div>{% endif %}
-                </div>
-                <div class="col-md-6 mb-3" id="plazo-meses-container" style="display: none;">
-                    <label for="{{ form.plazo_meses.id_for_label }}" class="form-label">Plazo en Meses</label>
-                    {{ form.plazo_meses }}
-                    {% if form.plazo_meses.errors %}<div class="text-danger small mt-1">{{ form.plazo_meses.errors|striptags }}</div>{% endif %}
-                </div>
+                <div class="col-md-6 mb-3"><label for="{{ form.modo_pago.id_for_label }}" class="form-label">Modalidad de Pago</label>{{ form.modo_pago }}{% if form.modo_pago.errors %}<div class="text-danger small mt-1">{{ form.modo_pago.errors|striptags }}</div>{% endif %}</div>
+                <div class="col-md-6 mb-3" id="plazo-meses-container" style="display: none;"><label for="{{ form.plazo_meses.id_for_label }}" class="form-label">Plazo en Meses</label>{{ form.plazo_meses }}{% if form.plazo_meses.errors %}<div class="text-danger small mt-1">{{ form.plazo_meses.errors|striptags }}</div>{% endif %}</div>
             </div>
 
             <div class="mt-4 text-end">
