@@ -1,6 +1,10 @@
 # dashboard_admin/urls.py
 from django.urls import path
 from .views import (
+    AsesorCreateView,
+    AsesorDeleteView,
+    AsesorListView,
+    AsesorUpdateView,
     CarteraGeneralView,
     ClientListView, 
     ClientCreateView, 
@@ -89,6 +93,12 @@ urlpatterns = [
     path('siniestros/<int:siniestro_pk>/add-foto/', add_foto_view, name='add_foto_siniestro'),
     path('documentos/<int:pk>/delete/', delete_documento_view, name='delete_documento_siniestro'),
     path('fotos/<int:pk>/delete/', delete_foto_view, name='delete_foto_siniestro'),
+
+
+    path('asesores/', AsesorListView.as_view(), name='lista_asesores'),
+    path('asesores/nuevo/', AsesorCreateView.as_view(), name='crear_asesor'),
+    path('asesores/editar/<int:pk>/', AsesorUpdateView.as_view(), name='editar_asesor'),
+    path('asesores/eliminar/<int:pk>/', AsesorDeleteView.as_view(), name='eliminar_asesor'),
 
 
 ]

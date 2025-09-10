@@ -44,6 +44,9 @@
                         <i class="fas fa-chart-line me-2"></i>Reportes
                     </a>
                 </li>
+                <a class="nav-link text-white" href="{% url 'reportes:reporte_asesor' %}">
+                    <i class="fas fa-user-check me-2"></i>Rendimiento Asesor
+                </a>
                 <li class="nav-item">
                     <a class="nav-link text-white" href="{% url 'dashboard_admin:lista_siniestros' %}">
                         <i class="fas fa-car-crash me-2"></i>Siniestros
@@ -58,6 +61,11 @@
                 <li class="nav-item">
                     <a class="nav-link text-white" href="{% url 'dashboard_admin:lista_companias' %}">
                         <i class="fas fa-building me-2"></i>Compañías
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="{% url 'dashboard_admin:lista_asesores' %}">
+                        <i class="fas fa-user-tie me-2"></i>Asesores
                     </a>
                 </li>
             </ul>

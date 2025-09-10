@@ -9,9 +9,9 @@ from django.contrib.auth.models import User
 from django.urls import reverse_lazy
 from django.shortcuts import redirect, get_object_or_404
 from django.views.decorators.http import require_POST
-from polizas.models import Poliza, TipoSeguro, CompaniaAseguradora, Vehiculo
+from polizas.models import Asesor, Poliza, TipoSeguro, CompaniaAseguradora, Vehiculo
 from polizas.forms import PolicyForm
-from .forms import CancelPolicyForm, DocumentoSiniestroForm, FotoSiniestroForm, VehiculoForm
+from .forms import AsesorForm, CancelPolicyForm, DocumentoSiniestroForm, FotoSiniestroForm, VehiculoForm
 from .forms import ClientCreationForm, ClientUpdateForm, TipoSeguroForm, CompaniaAseguradoraForm
 from datetime import date, datetime, timedelta
 from django.utils import timezone
@@ -831,3 +831,49 @@ def revertir_pago_cuota_view(request, pk):
 
     # Redirigimos de vuelta a la página de detalle de cartera
     return redirect('dashboard_admin:detalle_cartera_poliza', pk=poliza.pk)
+
+
+
+class AsesorListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = Asesor
+    template_name = 'dashboard_admin/asesor_list.html'
+    context_object_name = 'asesores'
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+class AsesorCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    model = Asesor
+    form_class = AsesorForm
+    template_name = 'dashboard_admin/asesor_form.html'
+    success_url = reverse_lazy('dashboard_admin:lista_asesores')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = 'Añadir Nuevo Asesor'
+        return context
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+class AsesorUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Asesor
+    form_class = AsesorForm
+    template_name = 'dashboard_admin/asesor_form.html'
+    success_url = reverse_lazy('dashboard_admin:lista_asesores')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = 'Editar Asesor'
+        return context
+
+    def test_func(self):
+        return self.request.user.is_staff
+
+class AsesorDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Asesor
+    template_name = 'dashboard_admin/confirm_delete.html' # Reutilizamos la plantilla genérica
+    success_url = reverse_lazy('dashboard_admin:lista_asesores')
+
+    def test_func(self):
+        return self.request.user.is_staff

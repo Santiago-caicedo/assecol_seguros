@@ -42,7 +42,15 @@ class CompaniaAseguradora(models.Model):
         return self.nombre
     
 
+class Asesor(models.Model):
+    nombre_completo = models.CharField(max_length=200, unique=True)
+    # Puedes añadir más campos en el futuro, como cédula, fecha de ingreso, etc.
 
+    class Meta:
+        ordering = ['nombre_completo']
+
+    def __str__(self):
+        return self.nombre_completo
     
 class Poliza(models.Model):
     # --- Opciones para los campos 'choices' ---
@@ -89,6 +97,15 @@ class Poliza(models.Model):
     estado = models.CharField('Estado de la Póliza', max_length=10, choices=ESTADO_POLIZA_CHOICES, default='ACTIVA')
     fecha_cancelacion = models.DateField(blank=True, null=True)
     motivo_cancelacion = models.TextField(blank=True)
+
+    asesor = models.ForeignKey(
+        Asesor,
+        on_delete=models.PROTECT, # Protegemos para no borrar un asesor si tiene pólizas
+        related_name='polizas_vendidas',
+        null=True, 
+        blank=True,
+        help_text="El asesor que realizó la venta."
+    )
 
     monto_devolucion = models.DecimalField('Monto a Devolver', max_digits=12, decimal_places=2, null=True, blank=True, help_text="Calculado al momento de la cancelación.")
     comision_devuelta = models.DecimalField('Comisión a Devolver', max_digits=12, decimal_places=2, null=True, blank=True, help_text="Comisión que Assecol retorna, calculada al cancelar.")

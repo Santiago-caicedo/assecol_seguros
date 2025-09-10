@@ -1,7 +1,7 @@
 # dashboard_admin/forms.py
 from django import forms
 from django.contrib.auth.models import User
-from polizas.models import TipoSeguro, CompaniaAseguradora, Poliza, Vehiculo
+from polizas.models import Asesor, TipoSeguro, CompaniaAseguradora, Poliza, Vehiculo
 from siniestros.models import Siniestro, SubtipoSiniestro
 from siniestros.models import DocumentoSiniestro, FotoSiniestro
 
@@ -181,3 +181,17 @@ class FotoSiniestroForm(forms.ModelForm):
         widgets = {
             'descripcion': forms.TextInput(attrs={'placeholder': 'Descripción breve de la foto'}),
         }
+
+
+
+class AsesorForm(forms.ModelForm):
+    class Meta:
+        model = Asesor
+        fields = ['nombre_completo']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['nombre_completo'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Ej: Juan David Pérez'
+        })

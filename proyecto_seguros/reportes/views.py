@@ -5,7 +5,7 @@ import pandas as pd
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils import timezone
-from polizas.models import Poliza, TipoSeguro, CompaniaAseguradora
+from polizas.models import Asesor, Poliza, TipoSeguro, CompaniaAseguradora
 from cartera.models import Pago
 from django.contrib.auth.models import User
 from django.db.models import Sum, Count, F
@@ -116,3 +116,52 @@ def panel_reportes_view(request):
     }
     
     return render(request, 'reportes/panel_reportes.html', context)
+
+
+
+@login_required
+@user_passes_test(es_admin)
+def reporte_asesor_view(request):
+    hoy = timezone.now()
+
+    # Obtenemos la lista de todos los asesores para el filtro
+    asesores = Asesor.objects.all()
+
+    # --- Manejo de Filtros ---
+    asesor_id = request.GET.get('asesor_id')
+    mes = int(request.GET.get('mes', hoy.month))
+    ano = int(request.GET.get('ano', hoy.year))
+
+    polizas_vendidas = Poliza.objects.none() # Queryset vacío por defecto
+    asesor_seleccionado = None
+    total_primas_vendidas = 0
+    total_comisiones_generadas = 0
+
+    if asesor_id:
+        try:
+            asesor_seleccionado = Asesor.objects.get(pk=asesor_id)
+            polizas_vendidas = Poliza.objects.filter(
+                asesor=asesor_seleccionado,
+                fecha_inicio__year=ano,
+                fecha_inicio__month=mes
+            ).select_related('cliente', 'tipo_seguro', 'compania_aseguradora')
+
+            # Calculamos los totales para este asesor en este periodo
+            for poliza in polizas_vendidas:
+                total_primas_vendidas += poliza.valor_prima_sin_iva
+                total_comisiones_generadas += poliza.valor_comision
+        except Asesor.DoesNotExist:
+            asesor_seleccionado = None
+
+    context = {
+        'asesores': asesores,
+        'polizas_vendidas': polizas_vendidas,
+        'asesor_seleccionado': asesor_seleccionado,
+        'total_primas_vendidas': total_primas_vendidas,
+        'total_comisiones_generadas': total_comisiones_generadas,
+        'mes_seleccionado': mes,
+        'ano_seleccionado': ano,
+        'rango_anos': range(hoy.year, hoy.year - 5, -1),
+        'meses': [(i, datetime(2000, i, 1).strftime('%B').capitalize()) for i in range(1, 13)],
+    }
+    return render(request, 'reportes/reporte_asesor.html', context)
