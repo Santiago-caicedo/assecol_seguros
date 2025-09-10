@@ -35,6 +35,7 @@ from .views import (
     marcar_comision_liquidada_view,
     marcar_cuota_mora_view,
     marcar_cuota_pagada_view,
+    revertir_pago_cuota_view,
     test_select2_view
 )
 
@@ -64,6 +65,7 @@ urlpatterns = [
     path('polizas/<int:pk>/cartera/', PolicyPortfolioDetailView.as_view(), name='detalle_cartera_poliza'),
     path('cuotas/<int:pk>/marcar-pagada/', marcar_cuota_pagada_view, name='marcar_cuota_pagada'),
     path('cuotas/<int:pk>/marcar-mora/', marcar_cuota_mora_view, name='marcar_cuota_mora'),
+    path('cuotas/<int:pk>/revertir-pago/', revertir_pago_cuota_view, name='revertir_pago_cuota'),
     path('vehiculos/', VehiculoListView.as_view(), name='lista_vehiculos'),
     path('vehiculos/nuevo/', VehiculoCreateView.as_view(), name='crear_vehiculo'),
     path('vehiculos/editar/<int:pk>/', VehiculoUpdateView.as_view(), name='editar_vehiculo'),

@@ -796,3 +796,38 @@ def delete_foto_view(request, pk):
     siniestro_pk = foto.siniestro.pk
     foto.delete()
     return redirect('dashboard_admin:detalle_siniestro', pk=siniestro_pk)
+
+
+
+
+# 👇 VISTA NUEVA PARA REVERTIR PAGO 👇
+@login_required
+@user_passes_test(es_admin)
+@require_POST
+def revertir_pago_cuota_view(request, pk):
+    cuota = get_object_or_404(Cuota, pk=pk)
+    poliza = cuota.poliza
+
+    # 1. Revertimos el estado de la cuota a Pendiente
+    cuota.estado = 'PENDIENTE'
+    cuota.save()
+
+    # 2. Buscamos y eliminamos el registro de Pago asociado a esta cuota
+    Pago.objects.filter(cuota=cuota).delete()
+
+    # 3. Opcional: Re-evaluamos el estado de la póliza por si ahora entra en mora
+    # (Esto es útil si la fecha de la cuota revertida ya pasó)
+    hoy = timezone.now().date()
+    cuotas_vencidas_no_pagadas = poliza.cuotas.filter(
+        fecha_vencimiento__lt=hoy,
+        estado__in=['PENDIENTE', 'EN_MORA']
+    ).exists()
+
+    if cuotas_vencidas_no_pagadas:
+        poliza.estado_cartera = 'EN_MORA'
+    else:
+        poliza.estado_cartera = 'AL_DIA'
+    poliza.save()
+
+    # Redirigimos de vuelta a la página de detalle de cartera
+    return redirect('dashboard_admin:detalle_cartera_poliza', pk=poliza.pk)

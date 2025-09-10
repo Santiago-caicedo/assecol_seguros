@@ -47,14 +47,21 @@
                         </td>
                         <td class="text-end">
                             {% if cuota.estado == 'PAGADA' %}
-                                <span class="text-muted small">Registrado</span>
-                            {% else %}
+                                <div class="d-flex justify-content-end align-items-center">
+                                    <span class="text-success me-2">REGISTRADO</span>
+                                    <form action="{% url 'dashboard_admin:revertir_pago_cuota' pk=cuota.pk %}" method="post" onsubmit="return confirm('¿Estás seguro de que quieres revertir este pago? Esta acción eliminará el registro de la comisión asociada.');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-warning btn-sm" title="Revertir Pago">
+                                            <i class="fas fa-undo"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            {% elif cuota.estado == 'PENDIENTE' or cuota.estado == 'EN_MORA' %}
                                 <div class="d-flex justify-content-end">
                                     <form action="{% url 'dashboard_admin:marcar_cuota_pagada' pk=cuota.pk %}" method="post" class="me-2">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-success btn-sm">Pagada</button>
                                     </form>
-                                    
                                     {% if cuota.estado == 'PENDIENTE' %}
                                         <form action="{% url 'dashboard_admin:marcar_cuota_mora' pk=cuota.pk %}" method="post">
                                             {% csrf_token %}
