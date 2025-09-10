@@ -520,25 +520,32 @@ class PolicyPortfolioDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailV
 
 @login_required
 @user_passes_test(es_admin)
-@require_POST # Asegura que esta vista solo acepte peticiones POST
+@require_POST
 def marcar_cuota_pagada_view(request, pk):
     cuota = get_object_or_404(Cuota, pk=pk)
     poliza = cuota.poliza
 
-    # Cambiamos el estado de la cuota
+    # Actualizamos el estado de la cuota del cliente
     cuota.estado = 'PAGADA'
     cuota.save()
 
-    # Creamos un registro de Pago asociado a esta cuota
+    # --- LÓGICA DE COMISIÓN CORREGIDA ---
+
+    # 1. Calculamos la porción de comisión para esta cuota específica
+    porcentaje_comision = poliza.tipo_seguro.comision_porcentaje / 100
+    comision_de_la_cuota = cuota.monto_cuota * porcentaje_comision
+
+    # 2. Creamos un registro de Pago por el valor de la COMISIÓN de la cuota
     Pago.objects.create(
-        poliza=cuota.poliza,
+        poliza=poliza,
         cuota=cuota,
         fecha_pago=timezone.now().date(),
-        monto_pagado=cuota.monto_cuota,
-        notas=f"Pago registrado automáticamente para la cuota #{cuota.numero_cuota}."
+        monto_pagado=comision_de_la_cuota, # <-- CAMBIO CLAVE
+        estado_comision='PENDIENTE',
+        notas=f"Comisión generada por el pago de la cuota #{cuota.numero_cuota}."
     )
 
-
+    # Después de pagar, revisamos si todavía quedan cuotas en mora
     otras_cuotas_en_mora = poliza.cuotas.filter(estado='EN_MORA').exists()
 
     if not otras_cuotas_en_mora:
@@ -546,8 +553,7 @@ def marcar_cuota_pagada_view(request, pk):
         poliza.estado_cartera = 'AL_DIA'
         poliza.save()
 
-    # Redirigimos de vuelta a la página de detalle de cartera de la póliza
-    return redirect('dashboard_admin:detalle_cartera_poliza', pk=cuota.poliza.pk)
+    return redirect('dashboard_admin:detalle_cartera_poliza', pk=poliza.pk)
 
 
 @login_required
