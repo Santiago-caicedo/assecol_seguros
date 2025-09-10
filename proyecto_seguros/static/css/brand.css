@@ -1,6 +1,7 @@
 /* static/css/brand.css */
 
 /* Definimos los colores de la marca Assecol como variables */
+
 :root {
     --assecol-blue: #123AA9;
     --assecol-orange: #FE7C04;
@@ -152,3 +153,5 @@ body {
   height: 350px; /* Puedes ajustar esta altura como prefieras */
   width: 100%;
 }
+
+

@@ -33,27 +33,35 @@
 </div>
 
 <div class="row">
-    <div class="col-lg-4 mb-4">
+    <div class="col-lg-3 col-md-6 mb-4">
         <div class="stat-card">
-            <p class="text-secondary text-uppercase">Comisiones Recibidas (Mes)</p>
-            <div class="d-flex justify-content-center align-items-center">
-                <h1>${{ total_comisiones_mes|intcomma }}</h1>
-                {% if comision_mom_change != 0 %}<span class="badge ms-3 {% if comision_mom_change > 0 %}text-bg-success{% else %}text-bg-danger{% endif %}">{% if comision_mom_change > 0 %}&#x25B2;{% else %}&#x25BC;{% endif %} {{ comision_mom_change }}%</span>{% endif %}
-            </div>
+            <p class="text-secondary text-uppercase">Ventas en Primas (con IVA)</p>
+            <h1 style="font-size: 2.2rem;">${{ total_ventas_con_iva|floatformat:0|intcomma }}</h1>
         </div>
     </div>
-    <div class="col-lg-4 mb-4">
+    <div class="col-lg-3 col-md-6 mb-4">
         <div class="stat-card">
-            <p class="text-secondary text-uppercase">Ventas en Primas (Mes)</p>
-            <h1>${{ total_ventas_mes|intcomma }}</h1>
+            <p class="text-secondary text-uppercase">Comisiones Pendientes (Mes)</p>
+            <h1 class="text-warning" style="font-size: 2.2rem;">${{ comisiones_pendientes_mes|floatformat:0|intcomma }}</h1>
         </div>
     </div>
-    <div class="col-lg-4 mb-4">
+    <div class="col-lg-3 col-md-6 mb-4">
+        <div class="stat-card">
+            <p class="text-secondary text-uppercase">Comisiones Liquidadas (Mes)</p>
+            <h1 class="text-success" style="font-size: 2.2rem;">${{ comisiones_liquidadas_mes|floatformat:0|intcomma }}</h1>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-4">
         <div class="stat-card">
             <p class="text-secondary text-uppercase">Nuevas Pólizas (Mes)</p>
             <div class="d-flex justify-content-center align-items-center">
-                <h1>{{ nuevas_polizas_mes }}</h1>
-                {% if polizas_mom_change != 0 %}<span class="badge ms-3 {% if polizas_mom_change > 0 %}text-bg-success{% else %}text-bg-danger{% endif %}">{% if polizas_mom_change > 0 %}&#x25B2;{% else %}&#x25BC;{% endif %} {{ polizas_mom_change }}%</span>{% endif %}
+                <h1 style="font-size: 2.2rem;">{{ nuevas_polizas_mes }}</h1>
+                {% if polizas_mom_change != 0 %}
+                <span class="badge ms-3 {% if polizas_mom_change > 0 %}text-bg-success{% else %}text-bg-danger{% endif %}">
+                    {% if polizas_mom_change > 0 %}&#x25B2;{% else %}&#x25BC;{% endif %}
+                    {{ polizas_mom_change }}%
+                </span>
+                {% endif %}
             </div>
         </div>
     </div>
