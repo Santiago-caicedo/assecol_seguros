@@ -561,13 +561,19 @@ def marcar_cuota_pagada_view(request, pk):
 @require_POST
 def marcar_cuota_mora_view(request, pk):
     cuota = get_object_or_404(Cuota, pk=pk)
+    poliza = cuota.poliza # Obtenemos la póliza padre
 
-    # Cambiamos el estado de la cuota
+    # Actualizamos el estado de la cuota individual
     cuota.estado = 'EN_MORA'
     cuota.save()
 
+    # 👇 MEJORA: Actualizamos también el estado general de la póliza 👇
+    if poliza.estado_cartera != 'EN_MORA':
+        poliza.estado_cartera = 'EN_MORA'
+        poliza.save()
+
     # Redirigimos de vuelta a la misma página
-    return redirect('dashboard_admin:detalle_cartera_poliza', pk=cuota.poliza.pk)
+    return redirect('dashboard_admin:detalle_cartera_poliza', pk=poliza.pk)
 
 
 class VehiculoListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
