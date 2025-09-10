@@ -87,7 +87,7 @@
                 </thead>
                 <tbody>
                 {% for pago in pagos_list %}
-                    {# Añadimos una clase a la fila si la póliza está cancelada #}
+                    {# Añadimos una clase a la fila si la póliza está cancelada para atenuarla #}
                     <tr {% if pago.poliza.estado == 'CANCELADA' %}class="table-light text-muted"{% endif %}>
                         <td>{{ pago.fecha_pago|date:"d M, Y" }}</td>
                         <td>{{ pago.poliza.cliente.get_full_name }}</td>
@@ -106,7 +106,21 @@
                             {% endif %}
                         </td>
                         <td class="text-end">
-                            </td>
+                            {# --- CÓDIGO DE ACCIONES RESTAURADO --- #}
+                            {% if pago.poliza.estado == 'ACTIVA' %}
+                                {% if pago.estado_comision == 'PENDIENTE' %}
+                                <form action="{% url 'dashboard_admin:marcar_comision_liquidada' pk=pago.pk %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-sm">Marcar Liquidada</button>
+                                </form>
+                                {% elif pago.estado_comision == 'LIQUIDADA' %}
+                                <form action="{% url 'dashboard_admin:desmarcar_comision_liquidada' pk=pago.pk %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm" title="Revertir a Pendiente">Anular</button>
+                                </form>
+                                {% endif %}
+                            {% endif %}
+                        </td>
                     </tr>
                 {% empty %}
                     <tr><td colspan="8" class="text-center p-4">No hay pagos que coincidan con los filtros.</td></tr>
