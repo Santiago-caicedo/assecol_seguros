@@ -11,29 +11,23 @@ def crear_plan_de_pagos(sender, instance, created, **kwargs):
     Si una póliza es NUEVA y su modo de pago es MENSUAL,
     crea automáticamente las cuotas correspondientes.
     """
-    # 👇 1. AÑADE ESTA LÍNEA DE DEPURACIÓN 👇
-    print(f"--- Señal post_save ejecutada para Póliza #{instance.numero_poliza} ---")
+    # Solo se ejecuta al crear una póliza nueva
+    if created and instance.modo_pago == 'MENSUAL':
 
-    if created:
-        # 👇 2. AÑADE ESTA LÍNEA DE DEPURACIÓN 👇
-        print(f"   -> La póliza es NUEVA (created=True). Modo de pago: {instance.modo_pago}")
+        # 👇 CAMBIO CLAVE AQUÍ 👇
+        # Usamos 'valor_prima_sin_iva' en lugar de 'prima_total'
+        monto_cuota = instance.valor_prima_sin_iva / instance.plazo_meses
 
-        if instance.modo_pago == 'MENSUAL':
-            # 👇 3. AÑADE ESTA LÍNEA DE DEPURACIÓN 👇
-            print(f"   --> ¡CONDICIÓN CUMPLIDA! Creando plan de pagos de {instance.plazo_meses} cuotas...")
+        # Creamos una cuota por cada mes del plazo
+        for i in range(instance.plazo_meses):
+            fecha_vencimiento = instance.fecha_inicio + relativedelta(months=i + 1)
 
-            monto_cuota = instance.prima_total / instance.plazo_meses
-            for i in range(instance.plazo_meses):
-                fecha_vencimiento = instance.fecha_inicio + relativedelta(months=i + 1)
-                Cuota.objects.create(
-                    poliza=instance,
-                    numero_cuota=i + 1,
-                    fecha_vencimiento=fecha_vencimiento,
-                    monto_cuota=monto_cuota
-                )
-            print("   --> Plan de pagos creado exitosamente.")
-    else:
-        print("   -> La póliza es una ACTUALIZACIÓN (created=False). No se hace nada.")
+            Cuota.objects.create(
+                poliza=instance,
+                numero_cuota=i + 1,
+                fecha_vencimiento=fecha_vencimiento,
+                monto_cuota=monto_cuota
+            )
 
 
 
