@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 from dotenv import load_dotenv # Importamos las librerías necesarias
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -171,5 +172,16 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'America/Bogota' # Asegúrate de que coincida con tu TIME_ZONE
+
+
+# --- CONFIGURACIÓN DE CELERY BEAT (PROGRAMADOR DE TAREAS) ---
+CELERY_BEAT_SCHEDULE = {
+    'enviar-recordatorios-diarios': {
+        'task': 'polizas.tasks.enviar_recordatorios_vencimiento',
+        # Se ejecuta todos los días a las 8:00 AM (hora del servidor)
+        'schedule': crontab(hour=8, minute=0), 
+    },
+    # Aquí podrías añadir más tareas programadas en el futuro
+}
 
 ADMIN_EMAIL = os.environ.get('EMAIL_ADMIN_NOTIFICACIONES')

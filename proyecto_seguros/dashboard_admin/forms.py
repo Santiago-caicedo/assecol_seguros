@@ -123,9 +123,16 @@ class VehiculoForm(forms.ModelForm):
     class Meta:
         model = Vehiculo
         fields = ['cliente', 'placa', 'marca', 'modelo', 'ano', 'soat_vencimiento_recordatorio']
+
+        labels = {
+            'modelo': 'Referencia',
+            'ano': 'Modelo (Año)',
+        }
+        
         widgets = {
             'soat_vencimiento_recordatorio': forms.DateInput(attrs={'type': 'date'}),
         }
+
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
