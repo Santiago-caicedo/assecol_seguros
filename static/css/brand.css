@@ -1,0 +1,181 @@
+/* ==========================================================================
+   ASSECOL SEGUROS - Brand CSS
+   Manual de Marca Applied
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Brand Colors - From Manual de Marca
+   -------------------------------------------------------------------------- */
+:root {
+    /* Primary Brand Colors */
+    --assecol-orange: #FE7C04;
+    --assecol-blue-dark: #123AA9;
+    --assecol-blue-bright: #303AF3;
+    --assecol-white: #FFFFFF;
+
+    /* Extended Palette */
+    --assecol-blue-darker: #0e2d80;
+    --assecol-blue-light: #e8ecfa;
+    --assecol-orange-light: #fff4e6;
+    --assecol-orange-dark: #d96800;
+
+    /* Semantic Colors */
+    --color-success: #059669;
+    --color-warning: #d97706;
+    --color-danger: #dc2626;
+    --color-info: #0284c7;
+
+    /* Neutral Colors */
+    --gray-50: #f8fafc;
+    --gray-100: #f1f5f9;
+    --gray-200: #e2e8f0;
+    --gray-300: #cbd5e1;
+    --gray-400: #94a3b8;
+    --gray-500: #64748b;
+    --gray-600: #475569;
+    --gray-700: #334155;
+    --gray-800: #1e293b;
+    --gray-900: #0f172a;
+}
+
+/* --------------------------------------------------------------------------
+   Typography - Montserrat
+   -------------------------------------------------------------------------- */
+body {
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* --------------------------------------------------------------------------
+   Bootstrap Overrides for Brand Consistency
+   -------------------------------------------------------------------------- */
+
+/* Primary Button */
+.btn-primary-assecol,
+.btn-primary {
+    background: linear-gradient(135deg, var(--assecol-blue-dark) 0%, var(--assecol-blue-bright) 100%) !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(18, 58, 169, 0.25);
+    transition: all 0.2s;
+}
+
+.btn-primary-assecol:hover,
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(18, 58, 169, 0.35);
+    color: white !important;
+}
+
+/* Secondary Button - Orange Accent */
+.btn-accent,
+.btn-warning {
+    background: linear-gradient(135deg, var(--assecol-orange) 0%, #ff9a3c 100%) !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(254, 124, 4, 0.25);
+}
+
+.btn-accent:hover,
+.btn-warning:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(254, 124, 4, 0.35);
+    color: white !important;
+}
+
+/* Navbar Brand */
+.navbar-brand-assecol {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: var(--assecol-blue-dark) !important;
+    letter-spacing: 1px;
+}
+
+.navbar-brand-assecol:hover {
+    color: var(--assecol-orange) !important;
+}
+
+/* Links */
+a {
+    color: var(--assecol-blue-dark);
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: var(--assecol-orange);
+}
+
+/* Form Controls */
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--assecol-blue-dark);
+    box-shadow: 0 0 0 3px rgba(18, 58, 169, 0.1);
+}
+
+/* Cards */
+.card {
+    border-radius: 12px;
+    border: 1px solid var(--gray-200);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+/* Badges */
+.badge.bg-primary {
+    background: var(--assecol-blue-dark) !important;
+}
+
+.badge.bg-warning {
+    background: var(--assecol-orange) !important;
+    color: white !important;
+}
+
+/* Alerts */
+.alert-primary {
+    background: var(--assecol-blue-light);
+    border-color: var(--assecol-blue-dark);
+    color: var(--assecol-blue-dark);
+}
+
+.alert-warning {
+    background: var(--assecol-orange-light);
+    border-color: var(--assecol-orange);
+    color: var(--assecol-orange-dark);
+}
+
+/* Tables */
+.table-hover tbody tr:hover {
+    background-color: var(--assecol-blue-light);
+}
+
+/* Progress Bars */
+.progress-bar {
+    background: linear-gradient(90deg, var(--assecol-blue-dark), var(--assecol-blue-bright));
+}
+
+/* Pagination */
+.page-link {
+    color: var(--assecol-blue-dark);
+}
+
+.page-item.active .page-link {
+    background: var(--assecol-blue-dark);
+    border-color: var(--assecol-blue-dark);
+}
+
+.page-link:hover {
+    color: var(--assecol-orange);
+    background-color: var(--assecol-blue-light);
+}
+
+/* Navbar */
+.navbar {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Selection */
+::selection {
+    background: var(--assecol-orange-light);
+    color: var(--assecol-blue-dark);
+}

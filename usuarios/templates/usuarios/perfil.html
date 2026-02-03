@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Mi Dashboard - Assecol Seguros{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    
+    <div class="welcome-banner">
+        <h1 class="display-5">Bienvenido, <strong>{{ cliente.get_full_name|default:cliente.username }}</strong></h1>
+        <p class="lead">Este es el resumen de tu actividad y seguros con Assecol.</p>
+    </div>
+
+    
+
+    <ul class="nav nav-tabs nav-fill mb-4" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="polizas-tab" data-bs-toggle="tab" data-bs-target="#polizas-tab-pane" type="button" role="tab">Mis Pólizas</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="vehiculos-tab" data-bs-toggle="tab" data-bs-target="#vehiculos-tab-pane" type="button" role="tab">Mis Vehículos</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="siniestros-tab" data-bs-toggle="tab" data-bs-target="#siniestros-tab-pane" type="button" role="tab">Mis Siniestros</button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="myTabContent">
+        
+        <div class="tab-pane fade show active" id="polizas-tab-pane" role="tabpanel">
+            <div class="row">
+                {% for poliza in cliente.polizas.all %}
+                <div class="col-lg-6 mb-4">
+                    <div class="card policy-card h-100">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="policy-icon me-3"><i class="fas fa-file-contract fa-2x"></i></div>
+                                    <div>
+                                        <h5 class="card-title mb-0">{{ poliza.tipo_seguro.nombre }}</h5>
+                                        <p class="card-text text-muted small">Póliza #{{ poliza.numero_poliza }}</p>
+                                    </div>
+                                </div>
+                                {% if poliza.estado == 'ACTIVA' %}<span class="status-badge status-active">Activa</span>
+                                {% elif poliza.estado == 'CANCELADA' %}<span class="status-badge status-cancelled">Cancelada</span>
+                                {% elif poliza.estado == 'VENCIDA' %}<span class="status-badge status-expired">Vencida</span>
+                                {% endif %}
+                            </div>
+                            <hr>
+                            <div class="row text-center my-3">
+                                <div class="col">
+                                    <p class="text-secondary mb-1 small text-uppercase">Inicio Vigencia</p>
+                                    <strong class="d-block">{{ poliza.fecha_inicio|date:"d M, Y" }}</strong>
+                                </div>
+                                <div class="col">
+                                    <p class="text-secondary mb-1 small text-uppercase">Fin Vigencia</p>
+                                    <strong class="d-block">{{ poliza.fecha_fin|date:"d M, Y" }}</strong>
+                                </div>
+                            </div>
+                            <div class="mt-auto text-center pt-3">
+                                {% if poliza.poliza_pdf %}
+                                     <a href="{{ poliza.poliza_pdf.url }}" class="btn btn-primary-assecol" target="_blank">
+                                        <i class="fas fa-download"></i> Descargar Póliza
+                                     </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col"><div class="alert alert-info">Aún no tienes pólizas registradas.</div></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="vehiculos-tab-pane" role="tabpanel">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light"><tr><th>Placa</th><th>Marca y Modelo</th><th>Recordatorio Vencimiento SOAT</th></tr></thead>
+                        <tbody>
+                        {% for vehiculo in lista_vehiculos %}
+                            <tr>
+                                <td class="fw-bold">{{ vehiculo.placa }}</td>
+                                <td>{{ vehiculo.marca }} {{ vehiculo.modelo }} ({{ vehiculo.ano }})</td>
+                                <td><span class="badge text-bg-info">{{ vehiculo.soat_vencimiento_recordatorio|date:"d M, Y"|default:"No registrado" }}</span></td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="3" class="text-center p-4">No tienes vehículos registrados.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="siniestros-tab-pane" role="tabpanel">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light"><tr><th># Siniestro</th><th>Póliza Asociada</th><th>Fecha</th><th>Estado</th></tr></thead>
+                        <tbody>
+                        {% for siniestro in lista_siniestros %}
+                            <tr>
+                                <td class="fw-bold">{{ siniestro.numero_siniestro }}</td>
+                                <td>Póliza #{{ siniestro.poliza.numero_poliza }} ({{ siniestro.poliza.tipo_seguro.nombre }})</td>
+                                <td>{{ siniestro.fecha_siniestro|date:"d M, Y" }}</td>
+                                <td><span class="badge text-bg-primary">{{ siniestro.get_estado_display }}</span></td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="4" class="text-center p-4">No tienes siniestros registrados.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

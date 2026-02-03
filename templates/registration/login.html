@@ -1,0 +1,582 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión | ASSECOL Seguros</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{% static 'img/logo_assecol.png' %}">
+
+    <!-- Fonts - Montserrat (Manual de Marca) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        /* ASSECOL Brand Colors from Manual de Marca */
+        :root {
+            --assecol-orange: #FE7C04;
+            --assecol-blue-dark: #123AA9;
+            --assecol-blue-bright: #303AF3;
+            --assecol-white: #FFFFFF;
+            --assecol-blue-darker: #0e2d80;
+            --assecol-orange-light: #fff4e6;
+            --color-success: #059669;
+            --color-danger: #dc2626;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            background: var(--gray-100);
+            overflow: hidden;
+        }
+
+        /* Split Layout */
+        .login-split {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        /* Left Panel - Branding */
+        .login-brand-panel {
+            flex: 1;
+            background: linear-gradient(135deg, var(--assecol-blue-dark) 0%, var(--assecol-blue-darker) 50%, #071a40 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-brand-panel::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, var(--assecol-blue-bright) 0%, transparent 70%);
+            opacity: 0.15;
+        }
+
+        .login-brand-panel::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -30%;
+            width: 80%;
+            height: 80%;
+            background: radial-gradient(circle, var(--assecol-orange) 0%, transparent 70%);
+            opacity: 0.08;
+        }
+
+        .brand-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            color: white;
+            max-width: 480px;
+        }
+
+        .brand-logo-wrapper {
+            width: 140px;
+            height: 140px;
+            background: white;
+            border-radius: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+            padding: 16px;
+        }
+
+        .brand-logo-wrapper img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .brand-title {
+            font-size: 48px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            margin-bottom: 8px;
+        }
+
+        .brand-tagline {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--assecol-orange);
+            text-transform: uppercase;
+            letter-spacing: 8px;
+            margin-bottom: 48px;
+        }
+
+        .brand-description {
+            font-size: 18px;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 400;
+        }
+
+        .brand-features {
+            display: flex;
+            justify-content: center;
+            gap: 48px;
+            margin-top: 60px;
+        }
+
+        .brand-feature {
+            text-align: center;
+        }
+
+        .brand-feature-icon {
+            width: 56px;
+            height: 56px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 22px;
+            color: var(--assecol-orange);
+        }
+
+        .brand-feature-text {
+            font-size: 13px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Right Panel - Form */
+        .login-form-panel {
+            width: 520px;
+            min-width: 520px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px 80px;
+            position: relative;
+        }
+
+        .login-form-header {
+            margin-bottom: 40px;
+        }
+
+        .login-form-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 12px;
+        }
+
+        .login-form-subtitle {
+            font-size: 15px;
+            color: var(--gray-500);
+            line-height: 1.6;
+        }
+
+        /* Alert */
+        .login-alert {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .login-alert-error {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .login-alert-error i {
+            color: var(--color-danger);
+            font-size: 18px;
+        }
+
+        /* Form */
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper .form-input {
+            padding-left: 52px;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400);
+            font-size: 17px;
+            transition: color 0.2s;
+        }
+
+        .input-wrapper:focus-within .input-icon {
+            color: var(--assecol-blue-dark);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px 20px;
+            font-size: 15px;
+            font-family: inherit;
+            font-weight: 500;
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--assecol-blue-dark);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(18, 58, 169, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--gray-400);
+            font-weight: 400;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 18px 32px;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: inherit;
+            background: linear-gradient(135deg, var(--assecol-blue-dark) 0%, var(--assecol-blue-bright) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 8px;
+            box-shadow: 0 8px 24px -4px rgba(18, 58, 169, 0.35);
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px -6px rgba(18, 58, 169, 0.45);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login i {
+            font-size: 18px;
+        }
+
+        /* Footer */
+        .login-footer {
+            margin-top: 48px;
+            text-align: center;
+        }
+
+        .login-footer-text {
+            font-size: 13px;
+            color: var(--gray-500);
+        }
+
+        .login-footer-link {
+            color: var(--assecol-blue-dark);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-footer-link:hover {
+            color: var(--assecol-orange);
+        }
+
+        .login-copyright {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--gray-200);
+            font-size: 12px;
+            color: var(--gray-400);
+        }
+
+        /* Decorative geometric shapes */
+        .geometric-shape {
+            position: absolute;
+            opacity: 0.05;
+            pointer-events: none;
+        }
+
+        .shape-1 {
+            top: 10%;
+            left: 5%;
+            width: 120px;
+            height: 120px;
+            border: 3px solid white;
+            border-radius: 24px;
+            transform: rotate(15deg);
+        }
+
+        .shape-2 {
+            bottom: 15%;
+            right: 10%;
+            width: 80px;
+            height: 80px;
+            background: var(--assecol-orange);
+            border-radius: 50%;
+        }
+
+        .shape-3 {
+            top: 60%;
+            left: 15%;
+            width: 0;
+            height: 0;
+            border-left: 40px solid transparent;
+            border-right: 40px solid transparent;
+            border-bottom: 70px solid white;
+            opacity: 0.08;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .login-brand-panel {
+                display: none;
+            }
+
+            .login-form-panel {
+                width: 100%;
+                min-width: auto;
+                max-width: 520px;
+                margin: 0 auto;
+                border-radius: 0;
+            }
+
+            body {
+                background: linear-gradient(135deg, var(--assecol-blue-dark) 0%, var(--assecol-blue-darker) 100%);
+                padding: 20px;
+            }
+
+            .login-form-panel {
+                border-radius: 24px;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .login-form-panel {
+                padding: 40px 32px;
+            }
+
+            .login-form-title {
+                font-size: 26px;
+            }
+
+            .brand-features {
+                flex-direction: column;
+                gap: 24px;
+            }
+        }
+
+        /* Loading state */
+        .btn-login.loading {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .btn-login.loading .btn-text {
+            display: none;
+        }
+
+        .btn-login .spinner {
+            display: none;
+        }
+
+        .btn-login.loading .spinner {
+            display: block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-split">
+        <!-- Left Panel - Branding -->
+        <div class="login-brand-panel">
+            <!-- Decorative Shapes -->
+            <div class="geometric-shape shape-1"></div>
+            <div class="geometric-shape shape-2"></div>
+            <div class="geometric-shape shape-3"></div>
+
+            <div class="brand-content">
+                <div class="brand-logo-wrapper">
+                    <img src="{% static 'img/logo_assecol.png' %}" alt="ASSECOL Seguros">
+                </div>
+                <h1 class="brand-title">ASSECOL</h1>
+                <p class="brand-tagline">S E G U R O S</p>
+                <p class="brand-description">
+                    Sistema integral de gestión de pólizas, cartera y comisiones para corredores de seguros en Colombia.
+                </p>
+
+                <div class="brand-features">
+                    <div class="brand-feature">
+                        <div class="brand-feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="brand-feature-text">Gestión de Pólizas</div>
+                    </div>
+                    <div class="brand-feature">
+                        <div class="brand-feature-icon">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <div class="brand-feature-text">Control de Cartera</div>
+                    </div>
+                    <div class="brand-feature">
+                        <div class="brand-feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="brand-feature-text">Reportes & KPIs</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Form -->
+        <div class="login-form-panel">
+            <div class="login-form-header">
+                <h2 class="login-form-title">Bienvenido</h2>
+                <p class="login-form-subtitle">
+                    Ingresa tus credenciales para acceder al sistema de gestión de seguros.
+                </p>
+            </div>
+
+            {% if form.errors %}
+            <div class="login-alert login-alert-error">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>Usuario o contraseña incorrectos. Por favor, intenta de nuevo.</span>
+            </div>
+            {% endif %}
+
+            <form method="post" class="login-form" novalidate id="loginForm">
+                {% csrf_token %}
+
+                <div class="form-group">
+                    <label class="form-label" for="id_username">Usuario</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user input-icon"></i>
+                        <input type="text"
+                               name="username"
+                               id="id_username"
+                               class="form-input"
+                               placeholder="Ingresa tu usuario"
+                               autofocus
+                               autocomplete="username"
+                               required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="id_password">Contraseña</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password"
+                               name="password"
+                               id="id_password"
+                               class="form-input"
+                               placeholder="Ingresa tu contraseña"
+                               autocomplete="current-password"
+                               required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-login" id="loginBtn">
+                    <span class="btn-text">Iniciar Sesión</span>
+                    <i class="fas fa-arrow-right btn-text"></i>
+                    <div class="spinner"></div>
+                </button>
+            </form>
+
+            <div class="login-footer">
+                <p class="login-footer-text">
+                    ¿Necesitas ayuda? Contacta al <a href="mailto:soporte@assecol.com" class="login-footer-link">administrador</a>
+                </p>
+                <p class="login-copyright">
+                    ASSECOL Seguros &copy; 2024 - 2026 | Colombia
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Form loading state
+        document.getElementById('loginForm').addEventListener('submit', function() {
+            const btn = document.getElementById('loginBtn');
+            btn.classList.add('loading');
+        });
+    </script>
+</body>
+</html>

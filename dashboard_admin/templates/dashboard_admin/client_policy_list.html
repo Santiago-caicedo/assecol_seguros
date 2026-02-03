@@ -1,0 +1,154 @@
+{% extends "dashboard_admin/dashboard_base.html" %}
+{% load humanize %}
+
+{% block title %}Pólizas - {{ cliente.get_full_name }}{% endblock %}
+{% block page_title %}Pólizas del Cliente{% endblock %}
+
+{% block dashboard_content %}
+<!-- Header Actions -->
+<div class="page-header">
+    <div class="page-header-actions">
+        <a href="{% url 'dashboard_admin:lista_clientes' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i>
+            Volver a Clientes
+        </a>
+    </div>
+</div>
+
+<!-- Client Info Card -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon icon-primary" style="width: 56px; height: 56px; font-size: 20px;">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; color: var(--gray-900); font-size: 20px;">{{ cliente.get_full_name|default:cliente.username }}</h3>
+                    <p style="margin: 4px 0 0 0; color: var(--gray-500); font-size: 14px;">
+                        <i class="fas fa-envelope"></i> {{ cliente.email|default:"-" }}
+                        &nbsp;·&nbsp;
+                        <i class="fas fa-phone"></i> {{ cliente.perfilcliente.telefono|default:"N/A" }}
+                    </p>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'dashboard_admin:editar_cliente' pk=cliente.pk %}" class="btn btn-secondary">
+                    <i class="fas fa-edit"></i>
+                    Editar Cliente
+                </a>
+                <a href="{% url 'dashboard_admin:crear_poliza_cliente' pk=cliente.pk %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Nueva Póliza
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Policies Section -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-file-contract"></i>
+            Pólizas Registradas
+        </h3>
+        <span class="badge badge-primary">{{ polizas.count }} pólizas</span>
+    </div>
+    <div class="card-body">
+        {% if polizas %}
+        <div class="row g-4">
+            {% for poliza in polizas %}
+            <div class="col-md-6">
+                <div class="card h-100" style="border: 1px solid var(--gray-200);">
+                    <div class="card-body">
+                        <!-- Header -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="table-cell-primary" style="color: var(--assecol-primary);">
+                                {{ poliza.tipo_seguro.nombre }}
+                            </div>
+                            {% if poliza.estado == 'ACTIVA' %}
+                            <span class="badge badge-success">Activa</span>
+                            {% elif poliza.estado == 'CANCELADA' %}
+                            <span class="badge badge-neutral">Cancelada</span>
+                            {% elif poliza.estado == 'VENCIDA' %}
+                            <span class="badge badge-danger">Vencida</span>
+                            {% endif %}
+                        </div>
+
+                        <p class="table-cell-secondary mb-2">Póliza #{{ poliza.numero_poliza }}</p>
+
+                        {% if poliza.vehiculo %}
+                        <p class="table-cell-secondary mb-2">
+                            <i class="fas fa-car"></i>
+                            Vehículo: <strong>{{ poliza.vehiculo.placa }}</strong>
+                        </p>
+                        {% endif %}
+
+                        {% if poliza.estado == 'CANCELADA' and poliza.monto_devolucion %}
+                        <div class="alert alert-info" style="font-size: 13px; padding: 12px; margin-bottom: 16px;">
+                            <i class="fas fa-info-circle"></i>
+                            Devolución al cliente: <strong>${{ poliza.monto_devolucion|intcomma }}</strong>
+                        </div>
+                        {% endif %}
+
+                        <hr style="margin: 16px 0; border-color: var(--gray-100);">
+
+                        <!-- Dates -->
+                        <div class="d-flex justify-content-between mb-3">
+                            <div>
+                                <div class="table-cell-secondary" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Inicio</div>
+                                <div class="table-cell-primary">{{ poliza.fecha_inicio|date:"d M, Y" }}</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="table-cell-secondary" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Vencimiento</div>
+                                <div class="table-cell-primary">{{ poliza.fecha_fin|date:"d M, Y" }}</div>
+                            </div>
+                        </div>
+
+                        <hr style="margin: 16px 0; border-color: var(--gray-100);">
+
+                        <!-- Footer -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                {% if poliza.poliza_pdf %}
+                                <a href="{{ poliza.poliza_pdf.url }}" target="_blank" style="font-size: 13px; color: var(--color-danger);">
+                                    <i class="fas fa-file-pdf"></i>
+                                    Ver documento
+                                </a>
+                                {% else %}
+                                <span class="text-muted" style="font-size: 13px;">Sin documento</span>
+                                {% endif %}
+                            </div>
+                            <div class="btn-group">
+                                {% if poliza.estado == 'ACTIVA' %}
+                                <a href="{% url 'dashboard_admin:editar_poliza' pk=poliza.pk %}" class="btn btn-secondary btn-sm" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'dashboard_admin:cancelar_poliza' pk=poliza.pk %}" class="btn btn-danger btn-sm" title="Cancelar">
+                                    <i class="fas fa-ban"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-file-contract"></i>
+            </div>
+            <div class="empty-state-title">Sin pólizas registradas</div>
+            <div class="empty-state-description">Este cliente no tiene pólizas registradas en el sistema.</div>
+            <a href="{% url 'dashboard_admin:crear_poliza_cliente' pk=cliente.pk %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                Agregar Póliza
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

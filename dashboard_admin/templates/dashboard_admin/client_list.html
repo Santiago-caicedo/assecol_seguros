@@ -1,0 +1,79 @@
+{% extends "dashboard_admin/dashboard_base.html" %}
+
+{% block title %}Clientes{% endblock %}
+{% block page_title %}Gestión de Clientes{% endblock %}
+
+{% block dashboard_content %}
+<!-- Header Actions -->
+<div class="page-header">
+    <div class="page-header-actions">
+        <a href="{% url 'dashboard_admin:crear_cliente' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i>
+            Nuevo Cliente
+        </a>
+    </div>
+</div>
+
+<!-- Clients Table -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-users"></i>
+            Lista de Clientes
+        </h3>
+        <span class="badge badge-primary">{{ clientes|length }} registros</span>
+    </div>
+    <div class="card-body p-0">
+        {% if clientes %}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Email</th>
+                        <th>Teléfono</th>
+                        <th>Cédula</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for cliente in clientes %}
+                    <tr>
+                        <td>
+                            <div class="table-cell-primary">{{ cliente.get_full_name|default:cliente.username }}</div>
+                            <div class="table-cell-secondary">@{{ cliente.username }}</div>
+                        </td>
+                        <td>{{ cliente.email|default:"-" }}</td>
+                        <td>{{ cliente.perfilcliente.telefono|default:"-" }}</td>
+                        <td>{{ cliente.perfilcliente.cedula|default:"-" }}</td>
+                        <td class="text-end">
+                            <div class="btn-group">
+                                <a href="{% url 'dashboard_admin:lista_polizas_cliente' pk=cliente.pk %}" class="btn btn-secondary btn-sm" title="Ver Pólizas">
+                                    <i class="fas fa-file-contract"></i>
+                                </a>
+                                <a href="{% url 'dashboard_admin:editar_cliente' pk=cliente.pk %}" class="btn btn-secondary btn-sm" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="empty-state-title">Sin clientes registrados</div>
+            <div class="empty-state-description">Comienza agregando tu primer cliente al sistema.</div>
+            <a href="{% url 'dashboard_admin:crear_cliente' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                Agregar Cliente
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,214 @@
+{% extends "dashboard_admin/dashboard_base.html" %}
+{% load humanize %}
+{% load cartera_extras %}
+
+{% block title %}Liquidaciones{% endblock %}
+{% block page_title %}Liquidación de Comisiones{% endblock %}
+
+{% block dashboard_content %}
+<!-- Period Filter -->
+<div class="filter-bar">
+    <form method="get">
+        <div class="filter-bar-inner">
+            <div class="filter-group">
+                <label class="filter-label">Métricas del mes:</label>
+                <select name="mes_kpi" class="form-control form-select" style="width: 160px;">
+                    {% for num, nombre in meses %}
+                    <option value="{{ num }}" {% if num == mes_seleccionado_kpi %}selected{% endif %}>{{ nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <select name="ano_kpi" class="form-control form-select" style="width: 120px;">
+                    {% for ano in rango_anos %}
+                    <option value="{{ ano }}" {% if ano == ano_seleccionado_kpi %}selected{% endif %}>{{ ano }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-sync-alt"></i>
+                Actualizar
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- KPI Stats -->
+<div class="stats-grid" style="grid-template-columns: repeat(2, 1fr);">
+    <div class="stat-card stat-warning">
+        <div class="stat-header">
+            <div class="stat-icon icon-warning">
+                <i class="fas fa-hourglass-half"></i>
+            </div>
+        </div>
+        <div class="stat-value">${{ total_pendiente|floatformat:0|intcomma }}</div>
+        <div class="stat-label">Comisiones Pendientes de Liquidar</div>
+        <div class="stat-footer">
+            Pagos pendientes de marcar como liquidados
+        </div>
+    </div>
+
+    <div class="stat-card stat-success">
+        <div class="stat-header">
+            <div class="stat-icon icon-success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+        </div>
+        <div class="stat-value">${{ total_liquidado|floatformat:0|intcomma }}</div>
+        <div class="stat-label">Total Comisiones Liquidadas</div>
+        <div class="stat-footer">
+            Pagadas a asesores en el período seleccionado
+        </div>
+    </div>
+</div>
+
+<!-- Table Filter -->
+<div class="filter-bar">
+    <form method="get">
+        <div class="filter-bar-inner">
+            <div class="filter-group">
+                <select name="cliente_id" class="form-control form-select" style="width: 200px;">
+                    <option value="">Todos los clientes</option>
+                    {% for cliente in todos_los_clientes %}
+                    <option value="{{ cliente.pk }}" {% if cliente.pk|stringformat:"s" == request.GET.cliente_id %}selected{% endif %}>{{ cliente.get_full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <select name="compania_id" class="form-control form-select" style="width: 200px;">
+                    <option value="">Todas las compañías</option>
+                    {% for compania in todas_las_companias %}
+                    <option value="{{ compania.pk }}" {% if compania.pk|stringformat:"s" == request.GET.compania_id %}selected{% endif %}>{{ compania.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Desde:</label>
+                <input type="date" name="fecha_inicio" class="form-control" style="width: 160px;" value="{{ request.GET.fecha_inicio|default:'' }}">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Hasta:</label>
+                <input type="date" name="fecha_fin" class="form-control" style="width: 160px;" value="{{ request.GET.fecha_fin|default:'' }}">
+            </div>
+            <button type="submit" class="btn btn-secondary">
+                <i class="fas fa-filter"></i>
+                Filtrar
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Payments Table -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-hand-holding-usd"></i>
+            Registro de Comisiones
+        </h3>
+        <span class="badge badge-primary">{{ pagos_list|length }} registros</span>
+    </div>
+    <div class="card-body p-0">
+        {% if pagos_list %}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Fecha Pago</th>
+                        <th>Cliente</th>
+                        <th>Póliza</th>
+                        <th>Compañía</th>
+                        <th class="text-end">Prima Total</th>
+                        <th class="text-end">Comisión</th>
+                        <th>Estado</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for pago in pagos_list %}
+                    <tr {% if pago.poliza.estado == 'CANCELADA' %}style="opacity: 0.6;"{% endif %}>
+                        <td>{{ pago.fecha_pago|date:"d M, Y" }}</td>
+                        <td>
+                            <div class="table-cell-primary">{{ pago.poliza.cliente.get_full_name }}</div>
+                        </td>
+                        <td>
+                            <div class="table-cell-primary">#{{ pago.poliza.numero_poliza }}</div>
+                            <div class="table-cell-secondary">{{ pago.poliza.tipo_seguro.nombre|default:"-" }}</div>
+                        </td>
+                        <td>{{ pago.poliza.compania_aseguradora.nombre }}</td>
+                        <td class="text-end">${{ pago.poliza.valor_prima_sin_iva|floatformat:0|intcomma }}</td>
+                        <td class="text-end fw-semibold">${{ pago.monto_pagado|floatformat:0|intcomma }}</td>
+                        <td>
+                            {% if pago.poliza.estado == 'CANCELADA' %}
+                            <span class="badge badge-neutral">Cancelada</span>
+                            {% elif pago.estado_comision == 'LIQUIDADA' %}
+                            <span class="badge badge-success">Liquidada</span>
+                            {% else %}
+                            <span class="badge badge-warning">Pendiente</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            {% if pago.poliza.estado == 'ACTIVA' %}
+                                {% if pago.estado_comision == 'PENDIENTE' %}
+                                <form action="{% url 'dashboard_admin:marcar_comision_liquidada' pk=pago.pk %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="fas fa-check"></i>
+                                        Liquidar
+                                    </button>
+                                </form>
+                                {% elif pago.estado_comision == 'LIQUIDADA' %}
+                                <form action="{% url 'dashboard_admin:desmarcar_comision_liquidada' pk=pago.pk %}" method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-secondary btn-sm" title="Revertir a Pendiente">
+                                        <i class="fas fa-undo"></i>
+                                        Anular
+                                    </button>
+                                </form>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if is_paginated %}
+        <div class="pagination-container">
+            <nav aria-label="Navegación de páginas">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ filtros_aplicados }}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                    {% for i in paginator.page_range %}
+                        <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                            <a class="page-link" href="?page={{ i }}&{{ filtros_aplicados }}">{{ i }}</a>
+                        </li>
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ filtros_aplicados }}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-hand-holding-usd"></i>
+            </div>
+            <div class="empty-state-title">Sin registros</div>
+            <div class="empty-state-description">No hay pagos que coincidan con los filtros aplicados.</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

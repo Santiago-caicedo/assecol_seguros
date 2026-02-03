@@ -1,0 +1,177 @@
+{% extends "dashboard_admin/dashboard_base.html" %}
+{% load humanize %}
+
+{% block title %}Rendimiento Asesor{% endblock %}
+{% block page_title %}Reporte de Rendimiento por Asesor{% endblock %}
+
+{% block dashboard_content %}
+<!-- Filter Bar -->
+<div class="filter-bar">
+    <form method="get">
+        <div class="filter-bar-inner">
+            <div class="filter-group">
+                <label class="filter-label">Asesor:</label>
+                <select name="asesor_id" class="form-control form-select" style="width: 250px;" required>
+                    <option value="">Selecciona un asesor...</option>
+                    {% for asesor in asesores %}
+                    <option value="{{ asesor.pk }}" {% if asesor_seleccionado.pk == asesor.pk %}selected{% endif %}>
+                        {{ asesor.nombre_completo }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">Periodo:</label>
+                <select name="mes" class="form-control form-select" style="width: 160px;">
+                    {% for num, nombre in meses %}
+                    <option value="{{ num }}" {% if num == mes_seleccionado %}selected{% endif %}>{{ nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <select name="ano" class="form-control form-select" style="width: 120px;">
+                    {% for ano in rango_anos %}
+                    <option value="{{ ano }}" {% if ano == ano_seleccionado %}selected{% endif %}>{{ ano }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-chart-bar"></i>
+                Generar Reporte
+            </button>
+        </div>
+    </form>
+</div>
+
+{% if asesor_seleccionado %}
+<!-- Advisor Info -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex align-items-center gap-3">
+            <div class="stat-icon icon-primary" style="width: 56px; height: 56px; font-size: 20px;">
+                <i class="fas fa-user-tie"></i>
+            </div>
+            <div>
+                <h3 style="margin: 0; color: var(--gray-900); font-size: 20px;">{{ asesor_seleccionado.nombre_completo }}</h3>
+                <p style="margin: 4px 0 0 0; color: var(--gray-500); font-size: 14px;">
+                    Resultados del período seleccionado
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Stats -->
+<div class="stats-grid">
+    <div class="stat-card stat-info">
+        <div class="stat-header">
+            <div class="stat-icon icon-info">
+                <i class="fas fa-file-signature"></i>
+            </div>
+        </div>
+        <div class="stat-value">{{ polizas_vendidas.count }}</div>
+        <div class="stat-label">Pólizas Vendidas</div>
+        <div class="stat-footer">
+            En el mes seleccionado
+        </div>
+    </div>
+
+    <div class="stat-card stat-primary">
+        <div class="stat-header">
+            <div class="stat-icon icon-primary">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+        </div>
+        <div class="stat-value">${{ total_primas_vendidas|floatformat:0|intcomma }}</div>
+        <div class="stat-label">Total Primas (sin IVA)</div>
+        <div class="stat-footer">
+            Valor total vendido
+        </div>
+    </div>
+
+    <div class="stat-card stat-success">
+        <div class="stat-header">
+            <div class="stat-icon icon-success">
+                <i class="fas fa-hand-holding-usd"></i>
+            </div>
+        </div>
+        <div class="stat-value">${{ total_comisiones_generadas|floatformat:0|intcomma }}</div>
+        <div class="stat-label">Total Comisiones Generadas</div>
+        <div class="stat-footer">
+            Comisiones por ventas
+        </div>
+    </div>
+</div>
+
+<!-- Sales Detail Table -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-list"></i>
+            Detalle de Ventas
+        </h3>
+        <span class="badge badge-primary">{{ polizas_vendidas.count }} pólizas</span>
+    </div>
+    <div class="card-body p-0">
+        {% if polizas_vendidas %}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th># Póliza</th>
+                        <th>Cliente</th>
+                        <th>Tipo de Seguro</th>
+                        <th>Compañía</th>
+                        <th class="text-end">Prima (sin IVA)</th>
+                        <th class="text-end">Comisión</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for poliza in polizas_vendidas %}
+                    <tr>
+                        <td>
+                            <div class="table-cell-primary">#{{ poliza.numero_poliza }}</div>
+                        </td>
+                        <td>{{ poliza.cliente.get_full_name }}</td>
+                        <td>{{ poliza.tipo_seguro.nombre }}</td>
+                        <td>{{ poliza.compania_aseguradora.nombre }}</td>
+                        <td class="text-end">${{ poliza.valor_prima_sin_iva|floatformat:0|intcomma }}</td>
+                        <td class="text-end fw-semibold">${{ poliza.valor_comision|floatformat:0|intcomma }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr style="background: var(--gray-50);">
+                        <td colspan="4" class="text-end fw-semibold">Totales:</td>
+                        <td class="text-end fw-semibold">${{ total_primas_vendidas|floatformat:0|intcomma }}</td>
+                        <td class="text-end fw-semibold" style="color: var(--color-success);">${{ total_comisiones_generadas|floatformat:0|intcomma }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-file-contract"></i>
+            </div>
+            <div class="empty-state-title">Sin ventas en este período</div>
+            <div class="empty-state-description">El asesor no tiene pólizas vendidas en el período seleccionado.</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<!-- No Advisor Selected -->
+<div class="card">
+    <div class="card-body">
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-user-tie"></i>
+            </div>
+            <div class="empty-state-title">Selecciona un asesor</div>
+            <div class="empty-state-description">Elige un asesor y un período para generar el reporte de rendimiento.</div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

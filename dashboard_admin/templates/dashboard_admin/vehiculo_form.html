@@ -1,0 +1,77 @@
+{% extends "dashboard_admin/dashboard_base.html" %}
+
+{% block dashboard_content %}
+<h1 class="h2 mb-4">{{ titulo|default:"Añadir Nuevo Vehículo" }}</h1>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-4">
+        
+        <form method="post" novalidate>
+            {% csrf_token %}
+            
+            {# Mostramos errores generales si los hay #}
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.cliente.id_for_label }}" class="form-label fw-bold">Cliente</label>
+                    {{ form.cliente }}
+                    <div class="form-text">Busca por nombre o nombre de usuario.</div>
+                    {% if form.cliente.errors %}<div class="text-danger small mt-1">{{ form.cliente.errors|striptags }}</div>{% endif %}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.placa.id_for_label }}" class="form-label fw-bold">Placa</label>
+                    {{ form.placa }}
+                    {% if form.placa.errors %}<div class="text-danger small mt-1">{{ form.placa.errors|striptags }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.marca.id_for_label }}" class="form-label fw-bold">Marca</label>
+                    {{ form.marca }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.modelo.id_for_label }}" class="form-label fw-bold">Modelo</label>
+                    {{ form.modelo }}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.ano.id_for_label }}" class="form-label fw-bold">Año</label>
+                    {{ form.ano }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.soat_vencimiento_recordatorio.id_for_label }}" class="form-label fw-bold">Recordatorio Vencimiento SOAT</label>
+                    {{ form.soat_vencimiento_recordatorio }}
+                </div>
+            </div>
+
+            <div class="mt-4 text-end">
+                <a href="{% url 'dashboard_admin:lista_vehiculos' %}" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary-assecol">Guardar Vehículo</button>
+            </div>
+        </form>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+    {{ block.super }} {# ESTO ES CRUCIAL: Carga jQuery y Select2 de dashboard_base.html PRIMERO #}
+    <script>
+    $(document).ready(function() {
+        // Y LUEGO, este script se ejecuta
+        $('#{{ form.cliente.id_for_label }}').select2({
+            placeholder: "Busca y selecciona un cliente",
+            allowClear: true,
+            theme: "bootstrap-5"
+        });
+    });
+    </script>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "dashboard_admin/dashboard_base.html" %}
+
+{% block title %}Asesores{% endblock %}
+{% block page_title %}Gestión de Asesores{% endblock %}
+
+{% block dashboard_content %}
+<!-- Header Actions -->
+<div class="page-header">
+    <div class="page-header-actions">
+        <a href="{% url 'dashboard_admin:crear_asesor' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i>
+            Nuevo Asesor
+        </a>
+    </div>
+</div>
+
+<!-- Advisors Table -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-id-badge"></i>
+            Lista de Asesores
+        </h3>
+        <span class="badge badge-primary">{{ asesores|length }} registros</span>
+    </div>
+    <div class="card-body p-0">
+        {% if asesores %}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Nombre del Asesor</th>
+                        <th>Email</th>
+                        <th>Teléfono</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for asesor in asesores %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="stat-icon icon-primary" style="width: 40px; height: 40px; font-size: 14px;">
+                                    <i class="fas fa-user-tie"></i>
+                                </div>
+                                <div class="table-cell-primary">{{ asesor.nombre_completo }}</div>
+                            </div>
+                        </td>
+                        <td>{{ asesor.email|default:"-" }}</td>
+                        <td>{{ asesor.telefono|default:"-" }}</td>
+                        <td class="text-end">
+                            <div class="btn-group">
+                                <a href="{% url 'dashboard_admin:editar_asesor' pk=asesor.pk %}" class="btn btn-secondary btn-sm" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'dashboard_admin:eliminar_asesor' pk=asesor.pk %}" class="btn btn-danger btn-sm" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-id-badge"></i>
+            </div>
+            <div class="empty-state-title">Sin asesores registrados</div>
+            <div class="empty-state-description">Comienza agregando tu primer asesor al sistema.</div>
+            <a href="{% url 'dashboard_admin:crear_asesor' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                Agregar Asesor
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

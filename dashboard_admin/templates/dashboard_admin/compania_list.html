@@ -1,0 +1,76 @@
+{% extends "dashboard_admin/dashboard_base.html" %}
+
+{% block title %}Compañías{% endblock %}
+{% block page_title %}Compañías Aseguradoras{% endblock %}
+
+{% block dashboard_content %}
+<!-- Header Actions -->
+<div class="page-header">
+    <div class="page-header-actions">
+        <a href="{% url 'dashboard_admin:crear_compania' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i>
+            Nueva Compañía
+        </a>
+    </div>
+</div>
+
+<!-- Companies Table -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-building"></i>
+            Lista de Compañías
+        </h3>
+        <span class="badge badge-primary">{{ companias|length }} registros</span>
+    </div>
+    <div class="card-body p-0">
+        {% if companias %}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Contacto</th>
+                        <th>Teléfono</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for compania in companias %}
+                    <tr>
+                        <td>
+                            <div class="table-cell-primary">{{ compania.nombre }}</div>
+                        </td>
+                        <td>{{ compania.contacto|default:"-" }}</td>
+                        <td>{{ compania.telefono|default:"-" }}</td>
+                        <td class="text-end">
+                            <div class="btn-group">
+                                <a href="{% url 'dashboard_admin:editar_compania' pk=compania.pk %}" class="btn btn-secondary btn-sm" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'dashboard_admin:eliminar_compania' pk=compania.pk %}" class="btn btn-danger btn-sm" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-building"></i>
+            </div>
+            <div class="empty-state-title">Sin compañías registradas</div>
+            <div class="empty-state-description">Comienza agregando tu primera compañía aseguradora.</div>
+            <a href="{% url 'dashboard_admin:crear_compania' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                Agregar Compañía
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

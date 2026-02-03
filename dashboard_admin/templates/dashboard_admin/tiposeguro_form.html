@@ -1,0 +1,43 @@
+{% extends "dashboard_admin/dashboard_base.html" %}
+
+{% block dashboard_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2">{{ titulo }}</h1>
+    <a href="{% url 'dashboard_admin:lista_tipos_seguro' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-times me-2"></i>Cancelar
+    </a>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-4">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="{{ form.nombre.id_for_label }}" class="form-label">Nombre del Tipo de Seguro</label>
+                {{ form.nombre }}
+            </div>
+            <div class="mb-3">
+                <label for="{{ form.descripcion.id_for_label }}" class="form-label">Descripción</label>
+                {{ form.descripcion }}
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.comision_porcentaje.id_for_label }}" class="form-label">Porcentaje de Comisión (%)</label>
+                    {{ form.comision_porcentaje }}
+                    <div class="form-text">Escribe el porcentaje sin el símbolo %. Por ejemplo: 15.00 para 15%.</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="{{ form.porcentaje_iva.id_for_label }}" class="form-label">Porcentaje de IVA (%)</label>
+                    {{ form.porcentaje_iva }}
+                    <div class="form-text">Escribe el porcentaje de IVA aplicable. Por ejemplo: 19.00 para 19%.</div>
+                </div>
+            </div>
+
+            <div class="mt-4 text-end">
+                <button type="submit" class="btn btn-primary-assecol">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

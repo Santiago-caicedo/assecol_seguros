@@ -1,0 +1,167 @@
+{% extends "dashboard_admin/dashboard_base.html" %}
+{% load humanize %}
+
+{% block title %}Cartera{% endblock %}
+{% block page_title %}Panel de Cartera{% endblock %}
+
+{% block dashboard_content %}
+<!-- KPI Stats -->
+<div class="stats-grid" style="grid-template-columns: repeat(2, 1fr);">
+    <div class="stat-card stat-primary">
+        <div class="stat-header">
+            <div class="stat-icon icon-primary">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+        </div>
+        <div class="stat-value">${{ total_ventas|floatformat:0|intcomma }}</div>
+        <div class="stat-label">Total Ventas (Primas sin IVA)</div>
+        <div class="stat-footer">
+            Valor total de pólizas activas
+        </div>
+    </div>
+
+    <div class="stat-card stat-success">
+        <div class="stat-header">
+            <div class="stat-icon icon-success">
+                <i class="fas fa-hand-holding-usd"></i>
+            </div>
+        </div>
+        <div class="stat-value">${{ total_comisiones|floatformat:0|intcomma }}</div>
+        <div class="stat-label">Total Comisiones Ganadas</div>
+        <div class="stat-footer">
+            Comisiones generadas por ventas
+        </div>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="filter-bar">
+    <form method="get" action="{% url 'dashboard_admin:cartera_general' %}">
+        <div class="filter-bar-inner">
+            <div class="filter-group">
+                <label class="filter-label">Cliente:</label>
+                <select name="cliente" class="form-control form-select" style="width: 250px;">
+                    <option value="">Todos los clientes</option>
+                    {% for cliente in todos_los_clientes %}
+                        <option value="{{ cliente.pk }}" {% if cliente.pk|stringformat:"s" == cliente_seleccionado %}selected{% endif %}>
+                            {{ cliente.get_full_name|default:cliente.username }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-filter"></i>
+                Filtrar
+            </button>
+            <div style="margin-left: auto;">
+                {% if polizas_en_mora %}
+                <span class="badge badge-danger" style="font-size: 14px; padding: 10px 16px;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    {{ polizas_en_mora.count }} Póliza(s) en Mora
+                </span>
+                {% else %}
+                <span class="badge badge-success" style="font-size: 14px; padding: 10px 16px;">
+                    <i class="fas fa-check-circle"></i>
+                    Cartera al día
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Portfolio Table -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-wallet"></i>
+            Estado de Cartera
+        </h3>
+        <span class="badge badge-primary">{{ polizas|length }} pólizas</span>
+    </div>
+    <div class="card-body p-0">
+        {% if polizas %}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Póliza</th>
+                        <th>Cliente</th>
+                        <th class="text-end">Prima sin IVA</th>
+                        <th class="text-end">Comisión</th>
+                        <th>Modalidad</th>
+                        <th>Estado Cartera</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for poliza in polizas %}
+                    <tr>
+                        <td>
+                            <div class="table-cell-primary">#{{ poliza.numero_poliza }}</div>
+                            <div class="table-cell-secondary">{{ poliza.tipo_seguro.nombre }}</div>
+                        </td>
+                        <td>{{ poliza.cliente.get_full_name|default:poliza.cliente.username }}</td>
+                        <td class="text-end fw-semibold">${{ poliza.valor_prima_sin_iva|floatformat:0|intcomma }}</td>
+                        <td class="text-end">${{ poliza.valor_comision|floatformat:0|intcomma }}</td>
+                        <td>{{ poliza.get_modo_pago_display }}</td>
+                        <td>
+                            {% if poliza.estado_cartera == 'AL_DIA' %}
+                            <span class="badge badge-success">Al día</span>
+                            {% elif poliza.estado_cartera == 'EN_MORA' %}
+                            <span class="badge badge-danger">En Mora</span>
+                            {% elif poliza.estado_cartera == 'PAGO_COMPLETO' %}
+                            <span class="badge badge-primary">Pago Completo</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'dashboard_admin:detalle_cartera_poliza' pk=poliza.pk %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-eye"></i>
+                                Gestionar
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if is_paginated %}
+        <div class="pagination-container">
+            <nav aria-label="Navegación de páginas">
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                    {% for i in paginator.page_range %}
+                        <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+                            <a class="page-link" href="?page={{ i }}&{{ request.GET.urlencode }}">{{ i }}</a>
+                        </li>
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-wallet"></i>
+            </div>
+            <div class="empty-state-title">Sin pólizas registradas</div>
+            <div class="empty-state-description">No hay pólizas en el sistema para mostrar en la cartera.</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

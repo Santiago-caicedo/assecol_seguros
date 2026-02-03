@@ -1,0 +1,95 @@
+{% extends "dashboard_admin/dashboard_base.html" %}
+
+{% block title %}Vehículos{% endblock %}
+{% block page_title %}Gestión de Vehículos{% endblock %}
+
+{% block dashboard_content %}
+<!-- Header Actions -->
+<div class="page-header">
+    <div class="page-header-actions">
+        <a href="{% url 'dashboard_admin:crear_vehiculo' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i>
+            Nuevo Vehículo
+        </a>
+    </div>
+</div>
+
+<!-- Vehicles Table -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-car"></i>
+            Lista de Vehículos
+        </h3>
+        <span class="badge badge-primary">{{ vehiculos|length }} registros</span>
+    </div>
+    <div class="card-body p-0">
+        {% if vehiculos %}
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Placa</th>
+                        <th>Vehículo</th>
+                        <th>Propietario</th>
+                        <th>SOAT Vence</th>
+                        <th>Recordatorio</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for vehiculo in vehiculos %}
+                    <tr>
+                        <td>
+                            <div class="table-cell-primary">{{ vehiculo.placa }}</div>
+                        </td>
+                        <td>
+                            <div class="table-cell-primary">{{ vehiculo.marca }}</div>
+                            <div class="table-cell-secondary">{{ vehiculo.modelo }} - {{ vehiculo.ano }}</div>
+                        </td>
+                        <td>{{ vehiculo.cliente.get_full_name|default:vehiculo.cliente.username }}</td>
+                        <td>
+                            {% if vehiculo.soat_fecha_vencimiento %}
+                            {{ vehiculo.soat_fecha_vencimiento|date:"d/m/Y" }}
+                            {% else %}
+                            <span class="text-muted">No registrado</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if vehiculo.soat_vencimiento_recordatorio %}
+                            <span class="badge badge-warning">{{ vehiculo.soat_vencimiento_recordatorio|date:"d M" }}</span>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group">
+                                <a href="{% url 'dashboard_admin:editar_vehiculo' pk=vehiculo.pk %}" class="btn btn-secondary btn-sm" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'dashboard_admin:eliminar_vehiculo' pk=vehiculo.pk %}" class="btn btn-danger btn-sm" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-car"></i>
+            </div>
+            <div class="empty-state-title">Sin vehículos registrados</div>
+            <div class="empty-state-description">Comienza agregando tu primer vehículo al sistema.</div>
+            <a href="{% url 'dashboard_admin:crear_vehiculo' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                Agregar Vehículo
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

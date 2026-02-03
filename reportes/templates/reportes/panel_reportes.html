@@ -1,0 +1,444 @@
+{% extends "dashboard_admin/dashboard_base.html" %}
+{% load humanize %}
+{% load reportes_extras %}
+
+{% block title %}Reportes{% endblock %}
+{% block page_title %}Reportes & Métricas{% endblock %}
+
+{% block dashboard_content %}
+<!-- Filter Bar -->
+<div class="filter-bar">
+    <form method="get">
+        <div class="filter-bar-inner">
+            <div class="filter-group">
+                <label class="filter-label">Periodo:</label>
+                <select name="mes" class="form-control form-select" style="width: 160px;">
+                    {% for num, nombre in meses %}
+                    <option value="{{ num }}" {% if num == mes_seleccionado %}selected{% endif %}>{{ nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-group">
+                <select name="ano" class="form-control form-select" style="width: 120px;">
+                    {% for ano in rango_anos %}
+                    <option value="{{ ano }}" {% if ano == ano_seleccionado %}selected{% endif %}>{{ ano }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-filter"></i>
+                Aplicar Filtro
+            </button>
+            <div style="margin-left: auto;">
+                <button type="button" class="btn btn-secondary" disabled>
+                    <i class="fas fa-file-pdf"></i>
+                    Exportar PDF
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- KPI Stats -->
+<div class="stats-grid">
+    <!-- Ventas con IVA -->
+    <div class="stat-card stat-primary">
+        <div class="stat-header">
+            <div class="stat-icon icon-primary">
+                <i class="fas fa-chart-line"></i>
+            </div>
+        </div>
+        <div class="stat-value">${{ total_ventas_con_iva|floatformat:0|intcomma }}</div>
+        <div class="stat-label">Ventas en Primas (con IVA)</div>
+        <div class="stat-footer">
+            Total del mes seleccionado
+        </div>
+    </div>
+
+    <!-- Comisiones Pendientes -->
+    <div class="stat-card stat-warning">
+        <div class="stat-header">
+            <div class="stat-icon icon-warning">
+                <i class="fas fa-hourglass-half"></i>
+            </div>
+        </div>
+        <div class="stat-value">${{ comisiones_pendientes_mes|floatformat:0|intcomma }}</div>
+        <div class="stat-label">Comisiones Pendientes</div>
+        <div class="stat-footer">
+            <a href="{% url 'dashboard_admin:liquidacion_comisiones' %}">Gestionar liquidaciones →</a>
+        </div>
+    </div>
+
+    <!-- Comisiones Liquidadas -->
+    <div class="stat-card stat-success">
+        <div class="stat-header">
+            <div class="stat-icon icon-success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+        </div>
+        <div class="stat-value">${{ comisiones_liquidadas_mes|floatformat:0|intcomma }}</div>
+        <div class="stat-label">Comisiones Liquidadas</div>
+        <div class="stat-footer">
+            Pagadas a asesores
+        </div>
+    </div>
+
+    <!-- Nuevas Pólizas -->
+    <div class="stat-card stat-info">
+        <div class="stat-header">
+            <div class="stat-icon icon-info">
+                <i class="fas fa-file-signature"></i>
+            </div>
+            {% if polizas_mom_change != 0 %}
+            <span class="stat-trend {% if polizas_mom_change > 0 %}trend-up{% else %}trend-down{% endif %}">
+                {% if polizas_mom_change > 0 %}
+                <i class="fas fa-arrow-up"></i>
+                {% else %}
+                <i class="fas fa-arrow-down"></i>
+                {% endif %}
+                {{ polizas_mom_change|floatformat:1 }}%
+            </span>
+            {% endif %}
+        </div>
+        <div class="stat-value">{{ nuevas_polizas_mes }}</div>
+        <div class="stat-label">Nuevas Pólizas</div>
+        <div class="stat-footer">
+            Comparado con mes anterior
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row 1 -->
+<div class="row g-4 mb-4">
+    <!-- Ventas por Tipo de Seguro -->
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-chart-pie"></i>
+                    Ventas por Tipo de Seguro
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="ventasPorTipoChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tendencia de Comisiones -->
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-chart-area"></i>
+                    Tendencia de Comisiones (12 meses)
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="commissionTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row 2 -->
+<div class="row g-4 mb-4">
+    <!-- Rendimiento por Compañía -->
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-building"></i>
+                    Comisiones por Compañía Aseguradora
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="performanceByCompanyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top 5 Clientes -->
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-trophy"></i>
+                    Top 5 Clientes por Comisión
+                </h3>
+            </div>
+            <div class="card-body p-0">
+                {% if top_clientes %}
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">#</th>
+                                <th>Cliente</th>
+                                <th class="text-end">Comisión</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cliente in top_clientes %}
+                            <tr>
+                                <td>
+                                    {% if forloop.counter == 1 %}
+                                    <span style="color: #f5a623;"><i class="fas fa-medal"></i></span>
+                                    {% elif forloop.counter == 2 %}
+                                    <span style="color: #9ca3af;"><i class="fas fa-medal"></i></span>
+                                    {% elif forloop.counter == 3 %}
+                                    <span style="color: #b45309;"><i class="fas fa-medal"></i></span>
+                                    {% else %}
+                                    {{ forloop.counter }}
+                                    {% endif %}
+                                </td>
+                                <td class="table-cell-primary">{{ cliente.nombre }}</td>
+                                <td class="text-end fw-semibold">${{ cliente.comision|intcomma }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="empty-state-title">Sin datos</div>
+                    <div class="empty-state-description">No hay comisiones este mes para mostrar un ranking.</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row 3 -->
+<div class="row g-4">
+    <!-- Salud de Cartera -->
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-heartbeat"></i>
+                    Salud General de la Cartera
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="chart-container chart-container-sm">
+                    <canvas id="portfolioHealthChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chartColors = {
+        primary: '#1e3a5f',
+        secondary: '#f5a623',
+        success: '#10b981',
+        warning: '#f59e0b',
+        danger: '#ef4444',
+        info: '#3b82f6',
+        gray: '#6b7280'
+    };
+
+    const chartFont = {
+        family: 'Inter, sans-serif',
+        size: 12
+    };
+
+    // Gráfico 1: Dona de Ventas por Tipo
+    const dataPie = {{ data_grafico_tipos|safe }};
+    if (dataPie.length > 0) {
+        new Chart(document.getElementById('ventasPorTipoChart'), {
+            type: 'doughnut',
+            data: {
+                labels: {{ labels_grafico_tipos|safe }},
+                datasets: [{
+                    data: dataPie,
+                    backgroundColor: [chartColors.primary, chartColors.secondary, chartColors.success, chartColors.info, chartColors.warning],
+                    borderColor: '#fff',
+                    borderWidth: 3,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            font: chartFont,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#1f2937',
+                        padding: 12,
+                        titleFont: { ...chartFont, weight: 'bold' },
+                        bodyFont: chartFont,
+                        callbacks: {
+                            label: function(ctx) {
+                                return `${ctx.label}: ${new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(ctx.parsed)}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Gráfico 2: Barras de Tendencia de Comisiones
+    const trendData = {{ data_tendencia|safe }};
+    if (trendData.length > 0) {
+        new Chart(document.getElementById('commissionTrendChart'), {
+            type: 'bar',
+            data: {
+                labels: {{ labels_tendencia|safe }},
+                datasets: [{
+                    label: 'Comisiones',
+                    data: trendData,
+                    backgroundColor: chartColors.secondary + 'cc',
+                    borderColor: chartColors.secondary,
+                    borderWidth: 0,
+                    borderRadius: 6,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1f2937',
+                        padding: 12,
+                        titleFont: { ...chartFont, weight: 'bold' },
+                        bodyFont: chartFont,
+                        callbacks: {
+                            label: function(ctx) {
+                                return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(ctx.parsed.y);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: chartFont }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f3f4f6' },
+                        ticks: {
+                            font: chartFont,
+                            callback: function(value) {
+                                return '$' + new Intl.NumberFormat('es-CO').format(value / 1000) + 'k';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Gráfico 3: Barras Horizontales de Rendimiento por Compañía
+    const dataCompanias = {{ data_companias|safe }};
+    if (dataCompanias.length > 0) {
+        new Chart(document.getElementById('performanceByCompanyChart'), {
+            type: 'bar',
+            data: {
+                labels: {{ labels_companias|safe }},
+                datasets: [{
+                    label: 'Comisión Generada',
+                    data: dataCompanias,
+                    backgroundColor: chartColors.primary + 'cc',
+                    borderColor: chartColors.primary,
+                    borderWidth: 0,
+                    borderRadius: 6,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1f2937',
+                        padding: 12,
+                        callbacks: {
+                            label: function(ctx) {
+                                return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(ctx.parsed.x);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: { color: '#f3f4f6' },
+                        ticks: {
+                            font: chartFont,
+                            callback: function(value) {
+                                return '$' + new Intl.NumberFormat('es-CO').format(value / 1000) + 'k';
+                            }
+                        }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { font: chartFont }
+                    }
+                }
+            }
+        });
+    }
+
+    // Gráfico 4: Torta de Salud de Cartera
+    const dataSalud = {{ data_salud_cartera|safe }};
+    if (dataSalud.length > 0) {
+        new Chart(document.getElementById('portfolioHealthChart'), {
+            type: 'pie',
+            data: {
+                labels: {{ labels_salud_cartera|safe }},
+                datasets: [{
+                    data: dataSalud,
+                    backgroundColor: [chartColors.success, chartColors.danger, chartColors.info],
+                    borderColor: '#fff',
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 16,
+                            font: chartFont,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

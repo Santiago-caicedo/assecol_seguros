@@ -1,0 +1,201 @@
+{% extends "dashboard_admin/dashboard_base.html" %}
+
+{% block title %}{{ titulo|default:"Nueva Póliza" }}{% endblock %}
+{% block page_title %}{{ titulo|default:"Nueva Póliza" }}{% endblock %}
+
+{% block dashboard_content %}
+<!-- Header Actions -->
+<div class="page-header">
+    <div class="page-header-info">
+        <span class="badge badge-primary" style="font-size: 14px;">
+            <i class="fas fa-user"></i>
+            {{ cliente.get_full_name }}
+        </span>
+    </div>
+    <div class="page-header-actions">
+        <a href="{% url 'dashboard_admin:lista_polizas_cliente' pk=cliente.pk %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i>
+            Volver
+        </a>
+    </div>
+</div>
+
+<!-- Form Card -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-file-contract"></i>
+            Información de la Póliza
+        </h3>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger" style="margin-bottom: 24px;">
+                {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Datos Básicos -->
+            <div class="form-section">
+                <h4 class="form-section-title">
+                    <i class="fas fa-info-circle"></i>
+                    Datos Básicos
+                </h4>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.numero_poliza.id_for_label }}" class="form-label">Número de Póliza *</label>
+                        {{ form.numero_poliza }}
+                        {% if form.numero_poliza.errors %}
+                        <div class="form-error">{{ form.numero_poliza.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.compania_aseguradora.id_for_label }}" class="form-label">Compañía Aseguradora *</label>
+                        {{ form.compania_aseguradora }}
+                        {% if form.compania_aseguradora.errors %}
+                        <div class="form-error">{{ form.compania_aseguradora.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.tipo_seguro.id_for_label }}" class="form-label">Tipo de Seguro *</label>
+                        {{ form.tipo_seguro }}
+                        {% if form.tipo_seguro.errors %}
+                        <div class="form-error">{{ form.tipo_seguro.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6" id="vehiculo-container" style="display: none;">
+                        <label for="{{ form.vehiculo.id_for_label }}" class="form-label">Vehículo (Placa)</label>
+                        {{ form.vehiculo }}
+                        <div class="form-text">Selecciona el vehículo asociado a esta póliza.</div>
+                        {% if form.vehiculo.errors %}
+                        <div class="form-error">{{ form.vehiculo.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.asesor.id_for_label }}" class="form-label">Asesor Asignado</label>
+                        {{ form.asesor }}
+                        {% if form.asesor.errors %}
+                        <div class="form-error">{{ form.asesor.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Valores y Fechas -->
+            <div class="form-section">
+                <h4 class="form-section-title">
+                    <i class="fas fa-calendar-alt"></i>
+                    Valores y Fechas
+                </h4>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.valor_prima_sin_iva.id_for_label }}" class="form-label">Valor Prima sin IVA *</label>
+                        {{ form.valor_prima_sin_iva }}
+                        {% if form.valor_prima_sin_iva.errors %}
+                        <div class="form-error">{{ form.valor_prima_sin_iva.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6"></div>
+                    <div class="col-md-6">
+                        <label for="{{ form.fecha_inicio.id_for_label }}" class="form-label">Fecha de Inicio *</label>
+                        {{ form.fecha_inicio }}
+                        {% if form.fecha_inicio.errors %}
+                        <div class="form-error">{{ form.fecha_inicio.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.fecha_fin.id_for_label }}" class="form-label">Fecha de Fin *</label>
+                        {{ form.fecha_fin }}
+                        {% if form.fecha_fin.errors %}
+                        <div class="form-error">{{ form.fecha_fin.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documento y Pago -->
+            <div class="form-section">
+                <h4 class="form-section-title">
+                    <i class="fas fa-credit-card"></i>
+                    Documento y Modalidad de Pago
+                </h4>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label for="{{ form.poliza_pdf.id_for_label }}" class="form-label">Documento de la Póliza (PDF)</label>
+                        {{ form.poliza_pdf }}
+                        {% if form.poliza_pdf.errors %}
+                        <div class="form-error">{{ form.poliza_pdf.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.modo_pago.id_for_label }}" class="form-label">Modalidad de Pago *</label>
+                        {{ form.modo_pago }}
+                        {% if form.modo_pago.errors %}
+                        <div class="form-error">{{ form.modo_pago.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6" id="plazo-meses-container" style="display: none;">
+                        <label for="{{ form.plazo_meses.id_for_label }}" class="form-label">Plazo en Meses</label>
+                        {{ form.plazo_meses }}
+                        {% if form.plazo_meses.errors %}
+                        <div class="form-error">{{ form.plazo_meses.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="form-actions">
+                <a href="{% url 'dashboard_admin:lista_polizas_cliente' pk=cliente.pk %}" class="btn btn-secondary">
+                    Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    Guardar Póliza
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Lógica para el Plazo en Meses
+    const modoPagoSelect = document.getElementById('{{ form.modo_pago.id_for_label }}');
+    const plazoContainer = document.getElementById('plazo-meses-container');
+
+    function togglePlazoVisibility() {
+        const selectedValue = modoPagoSelect.value;
+        if (selectedValue === 'CREDITO' || selectedValue === 'MENSUAL') {
+            plazoContainer.style.display = 'block';
+        } else {
+            plazoContainer.style.display = 'none';
+        }
+    }
+    togglePlazoVisibility();
+    modoPagoSelect.addEventListener('change', togglePlazoVisibility);
+
+    // Lógica para el campo Vehículo
+    const tipoSeguroSelect = document.getElementById('{{ form.tipo_seguro.id_for_label }}');
+    const vehiculoContainer = document.getElementById('vehiculo-container');
+    const vehiculoKeywords = ['vehículo', 'auto', 'soat', 'carro', 'moto'];
+
+    function toggleVehiculoVisibility() {
+        if (!tipoSeguroSelect.options[tipoSeguroSelect.selectedIndex]) return;
+        const selectedOptionText = tipoSeguroSelect.options[tipoSeguroSelect.selectedIndex].text.toLowerCase();
+        const isVehiculoPolicy = vehiculoKeywords.some(keyword => selectedOptionText.includes(keyword));
+
+        if (isVehiculoPolicy) {
+            vehiculoContainer.style.display = 'block';
+        } else {
+            vehiculoContainer.style.display = 'none';
+        }
+    }
+    toggleVehiculoVisibility();
+    tipoSeguroSelect.addEventListener('change', toggleVehiculoVisibility);
+});
+</script>
+{% endblock %}
