@@ -142,7 +142,7 @@ venv_seguros/
 ENV/
 env.bak/
 venv.bak/
-.env.production/
+.env.production
 
 # Spyder project settings
 .spyderproject
