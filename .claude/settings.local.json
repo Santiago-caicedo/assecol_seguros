@@ -3,7 +3,12 @@
     "allow": [
       "Bash(xargs:*)",
       "Bash(git mv:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(xxd:*)",
+      "Bash(iconv:*)",
+      "Bash(python:*)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
     ]
   }
 }

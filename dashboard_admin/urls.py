@@ -99,6 +99,4 @@ urlpatterns = [
     path('asesores/nuevo/', AsesorCreateView.as_view(), name='crear_asesor'),
     path('asesores/editar/<int:pk>/', AsesorUpdateView.as_view(), name='editar_asesor'),
     path('asesores/eliminar/<int:pk>/', AsesorDeleteView.as_view(), name='eliminar_asesor'),
-
-
 ]
