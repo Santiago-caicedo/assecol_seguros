@@ -26,6 +26,14 @@ DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 # Lee los hosts desde una variable de entorno, separados por comas
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
+# Orígenes confiables para CSRF (Django 4.0+). Lista coma-separada con esquema, ej:
+# DJANGO_CSRF_TRUSTED_ORIGINS=https://www.assecolseguros.com,https://assecolseguros.com
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '').split(',')
+    if origin.strip()
+]
+
 
 # Application definition
 
