@@ -133,14 +133,51 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
+# Static & Media files
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
-
-STATIC_URL = 'static/'
+# Configuración híbrida:
+#   - DEBUG=True  → archivos locales (desarrollo)
+#   - DEBUG=False → AWS S3 (bucket compartido `vadomdata`, prefijo S3_CLIENT_PREFIX)
 
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
+
+if DEBUG:
+    STATIC_URL = '/static/'
+    MEDIA_URL = '/media/'
+    STATIC_ROOT = BASE_DIR / 'staticfiles'
+    MEDIA_ROOT = BASE_DIR / 'media'
+    STORAGES = {
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    }
+else:
+    from storages.backends.s3boto3 import S3Boto3Storage
+
+    AWS_STORAGE_BUCKET_NAME = 'vadomdata'
+    AWS_S3_REGION_NAME = 'us-east-1'
+    AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+    AWS_DEFAULT_ACL = None
+
+    S3_PREFIX = os.environ.get('S3_CLIENT_PREFIX', 'default_prefix')
+
+    class StaticStorage(S3Boto3Storage):
+        location = f'{S3_PREFIX}/static'
+        default_acl = None
+
+    class MediaStorage(S3Boto3Storage):
+        location = f'{S3_PREFIX}/media'
+        default_acl = None
+
+    STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{S3_PREFIX}/static/'
+    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{S3_PREFIX}/media/'
+
+    STORAGES = {
+        "default": {"BACKEND": "proyecto_seguros.settings.MediaStorage"},
+        "staticfiles": {"BACKEND": "proyecto_seguros.settings.StaticStorage"},
+    }
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -152,14 +189,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = 'login_redirect'
 
 LOGOUT_REDIRECT_URL = '/'
-
-
-
-# URL que se usará para acceder a los archivos multimedia en el navegador.
-MEDIA_URL = '/media/'
-
-# Ruta en el disco duro donde se guardarán los archivos subidos.
-MEDIA_ROOT = BASE_DIR / 'media'
 
 
 

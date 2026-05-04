@@ -1,6 +1,7 @@
 amqp==5.3.1
 asgiref==3.9.1
 billiard==4.2.1
+boto3==1.35.99
 celery==5.5.3
 click-didyoumean==0.3.1
 click-plugins==1.1.1.2
@@ -8,6 +9,7 @@ click-repl==0.3.0
 click==8.2.1
 colorama==0.4.6
 Django==5.2.4
+django-storages==1.14.4
 dnspython==2.8.0
 eventlet==0.40.3
 greenlet==3.2.4

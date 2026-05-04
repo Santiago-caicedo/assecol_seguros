@@ -18,6 +18,10 @@ DB_PASSWORD=YTrx2nHYsXCMCi9
 DB_HOST=vadom-consulting-db.cotou8cmuagz.us-east-1.rds.amazonaws.com
 DB_PORT=5432
 
+# --- AWS S3 (storage de estáticos y media) ---
+# Bucket compartido `vadomdata`, separado por prefijo. Credenciales vía IAM Role del EC2.
+S3_CLIENT_PREFIX=assecol
+
 # --- Email SMTP ---
 EMAIL_HOST=                              # ej: smtp.gmail.com
 EMAIL_PORT=465
