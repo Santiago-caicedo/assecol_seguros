@@ -1,0 +1,27 @@
+# =====================================================================
+# ASSECOL - Variables de entorno para PRODUCCIÓN
+# =====================================================================
+# IMPORTANTE: este archivo contiene credenciales sensibles.
+# - NUNCA debe subirse al repositorio (revisa .gitignore).
+# - Permisos recomendados en el servidor: chmod 600 env_prod
+# =====================================================================
+
+# --- Django ---
+SECRET_KEY=TpiGn%QvgAJO5zG0J*BqjES7(qMl3ME)m&Q0_S)C!nAY@xX0Up5Pv-9crB8=
+DJANGO_DEBUG=False
+DJANGO_ALLOWED_HOSTS=                    # Completar con dominios del servidor, ej: assecol.com,www.assecol.com
+
+# --- Base de datos PostgreSQL (AWS RDS) ---
+DB_NAME=assecol_db
+DB_USER=usr.assecol_db
+DB_PASSWORD=YTrx2nHYsXCMCi9
+DB_HOST=vadom-consulting-db.cotou8cmuagz.us-east-1.rds.amazonaws.com
+DB_PORT=5432
+
+# --- Email SMTP ---
+EMAIL_HOST=                              # ej: smtp.gmail.com
+EMAIL_PORT=465
+EMAIL_HOST_USER=
+EMAIL_HOST_PASSWORD=
+DEFAULT_FROM_EMAIL=                      # ej: ASSECOL <noreply@assecol.com>
+EMAIL_ADMIN_NOTIFICACIONES=              # correo destino para notificaciones internas
