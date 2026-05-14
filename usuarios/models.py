@@ -9,6 +9,7 @@ class PerfilCliente(models.Model):
     cedula = models.CharField('Cédula/ID', max_length=20, unique=True, blank=True, null=True)
     telefono = models.CharField('Teléfono', max_length=20, blank=True, null=True)
     direccion = models.CharField('Dirección', max_length=255, blank=True)
+    fecha_nacimiento = models.DateField('Fecha de Nacimiento', blank=True, null=True)
 
     class Meta:
         verbose_name = 'Perfil de Cliente'

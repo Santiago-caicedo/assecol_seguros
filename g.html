@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arribo Seguro | Suite de Gestión Hotelera</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0a0a0a; color: #e5e5e5; }
+        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .gradient-border { border: 1px solid; border-image-source: linear-gradient(45deg, #00f2fe, #4facfe); border-image-slice: 1; }
+        .status-pulse { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto flex justify-center mb-8 space-x-4">
+        <button onclick="switchView('guest')" class="px-6 py-2 rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-500 transition">Vista Huésped</button>
+        <button onclick="switchView('staff')" class="px-6 py-2 rounded-full bg-zinc-800 text-zinc-300 font-semibold hover:bg-zinc-700 transition">Torre de Control (Staff)</button>
+    </div>
+
+    <div id="guest-view" class="max-w-md mx-auto space-y-6">
+        <header class="text-center">
+            <h1 class="text-2xl font-light tracking-widest text-white uppercase">Arribo <span class="font-bold text-blue-400">Seguro</span></h1>
+            <p class="text-zinc-500 text-sm">Bienvenido a tu burbuja de seguridad</p>
+        </header>
+
+        <div class="glass-card p-6 rounded-3xl">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-xs font-bold text-blue-400 uppercase tracking-tighter">Vuelo AA2410 - Status: Live</span>
+                <span class="flex items-center text-xs text-green-400"><i class="fas fa-plane-arrival mr-2 status-pulse"></i> ATERRIZADO</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-3xl font-bold">DFW</p>
+                    <p class="text-xs text-zinc-500">Dallas Fort Worth</p>
+                </div>
+                <div class="flex-grow border-t border-dashed border-zinc-700 mx-4 relative">
+                    <i class="fas fa-plane absolute -top-2 left-1/2 -translate-x-1/2 text-zinc-600"></i>
+                </div>
+                <div class="text-right">
+                    <p class="text-3xl font-bold text-white">CUN</p>
+                    <p class="text-xs text-zinc-500">Cancún Int.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-zinc-900 border-l-4 border-yellow-500 p-4 rounded-r-xl">
+            <div class="flex">
+                <i class="fas fa-shield-alt text-yellow-500 mt-1 mr-3"></i>
+                <div>
+                    <p class="font-bold text-sm">Instrucción de Salida:</p>
+                    <p class="text-xs text-zinc-400">Ignora los pasillos A y B. Busca el <strong>Logo X</strong> en la <strong>Columna 4</strong>. No aceptes transporte de terceros.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-3xl p-8 text-center text-black space-y-4">
+            <p class="text-xs font-bold uppercase tracking-widest">Tu Identificador de Transporte</p>
+            <div class="flex justify-center py-4">
+                <div class="w-48 h-48 bg-zinc-100 flex items-center justify-center border-4 border-black">
+                    <i class="fas fa-qrcode text-8xl"></i>
+                </div>
+            </div>
+            <div class="border-t border-zinc-200 pt-4">
+                <p class="text-sm font-bold uppercase">Nombre: John Doe</p>
+                <p class="text-xs text-zinc-500">Reserva: #AZ-99821</p>
+            </div>
+            <button class="w-full bg-black text-white py-4 rounded-xl font-bold flex items-center justify-center">
+                <i class="fab fa-whatsapp mr-2 text-xl text-green-400"></i> Contactar Concierge
+            </button>
+        </div>
+    </div>
+
+    <div id="staff-view" class="hidden max-w-6xl mx-auto space-y-8">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-white">The Control Tower</h1>
+                <p class="text-zinc-500 italic">Operaciones Logísticas de Huéspedes en Tiempo Real</p>
+            </div>
+            <div class="flex gap-4">
+                <div class="glass-card px-6 py-3 rounded-xl text-center">
+                    <p class="text-2xl font-bold text-blue-400">12</p>
+                    <p class="text-[10px] uppercase tracking-widest text-zinc-500">En Camino</p>
+                </div>
+                <div class="glass-card px-6 py-3 rounded-xl text-center border-red-500/30">
+                    <p class="text-2xl font-bold text-red-500">2</p>
+                    <p class="text-[10px] uppercase tracking-widest text-zinc-500">Desviaciones</p>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div class="lg:col-span-2 glass-card rounded-3xl overflow-hidden">
+                <div class="p-6 border-b border-white/10 flex justify-between items-center">
+                    <h3 class="font-semibold uppercase text-sm tracking-wider text-zinc-400">Monitor de Arribos</h3>
+                    <span class="text-[10px] bg-green-500/20 text-green-400 px-2 py-1 rounded-full font-mono">LIVE FEED</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-white/5 text-zinc-500 uppercase text-[10px]">
+                            <tr>
+                                <th class="p-4">Huésped</th>
+                                <th class="p-4">Vuelo / Status</th>
+                                <th class="p-4">Transporte</th>
+                                <th class="p-4">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-white/5">
+                            <tr class="hover:bg-white/5 transition">
+                                <td class="p-4">
+                                    <p class="font-bold text-white">John Doe</p>
+                                    <p class="text-[10px] text-zinc-500">Hab: Prioritaria (King Suite)</p>
+                                </td>
+                                <td class="p-4">
+                                    <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded">AA2410 - Landed</span>
+                                </td>
+                                <td class="p-4 text-zinc-400">
+                                    <i class="fas fa-car mr-2"></i> Suburban (V-102)
+                                </td>
+                                <td class="p-4">
+                                    <button class="text-xs bg-zinc-700 px-3 py-1 rounded hover:bg-zinc-600 transition">Detalle</button>
+                                </td>
+                            </tr>
+                            <tr class="bg-red-500/5 hover:bg-red-500/10 transition">
+                                <td class="p-4 border-l-2 border-red-500">
+                                    <p class="font-bold text-white">Sarah Smith</p>
+                                    <p class="text-[10px] text-red-400">Posible Estafa detectada</p>
+                                </td>
+                                <td class="p-4">
+                                    <span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">DL882 - Aterrizó hace 3h</span>
+                                </td>
+                                <td class="p-4 text-zinc-400">
+                                    <span class="text-red-400 underline">Sin Contacto</span>
+                                </td>
+                                <td class="p-4">
+                                    <button class="text-xs bg-red-600 px-3 py-1 rounded text-white font-bold">ALERTA</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="glass-card p-6 rounded-3xl border-blue-500/30 shadow-lg shadow-blue-500/5">
+                    <h3 class="text-sm font-bold text-blue-400 uppercase mb-4 tracking-tighter">Upselling Engine (Smart)</h3>
+                    <p class="text-xs text-zinc-400 mb-4">Se recomienda enviar oferta de Spa a <strong>John Doe</strong>. Tiempo estimado en transporte: 25 min.</p>
+                    <button class="w-full bg-blue-600 text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-blue-500 transition">Enviar Oferta vía WhatsApp</button>
+                </div>
+
+                <div class="glass-card p-6 rounded-3xl">
+                    <h3 class="text-sm font-bold text-zinc-300 uppercase mb-4 tracking-tighter">Limpieza / Housekeeping</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center text-xs">
+                            <span>Habitación 402 (Doe)</span>
+                            <span class="text-orange-400 font-bold uppercase text-[10px]">En Proceso</span>
+                        </div>
+                        <div class="w-full bg-zinc-800 h-2 rounded-full overflow-hidden">
+                            <div class="bg-orange-400 h-full" style="width: 75%"></div>
+                        </div>
+                        <p class="text-[10px] text-zinc-500 italic">Asignación prioritaria por aterrizaje detectado.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function switchView(view) {
+            const guestView = document.getElementById('guest-view');
+            const staffView = document.getElementById('staff-view');
+            const buttons = document.querySelectorAll('nav button');
+
+            if (view === 'guest') {
+                guestView.classList.remove('hidden');
+                staffView.classList.add('hidden');
+            } else {
+                guestView.classList.add('hidden');
+                staffView.classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -6,10 +6,15 @@ from siniestros.models import Siniestro, SubtipoSiniestro
 from siniestros.models import DocumentoSiniestro, FotoSiniestro
 
 class ClientCreationForm(forms.ModelForm):
-  
+
     cedula = forms.CharField(max_length=20, required=False)
     telefono = forms.CharField(max_length=20, required=False)
     direccion = forms.CharField(max_length=255, required=False)
+    fecha_nacimiento = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        label='Fecha de Nacimiento',
+    )
 
     class Meta:
         model = User
@@ -27,12 +32,13 @@ class ClientCreationForm(forms.ModelForm):
         user.set_password(self.cleaned_data["password"])
         if commit:
             user.save()
-            
+
             # El 'signal' ya creó el perfil, nosotros solo lo actualizamos.
             perfil = user.perfilcliente
             perfil.cedula = self.cleaned_data.get('cedula')
             perfil.telefono = self.cleaned_data.get('telefono')
             perfil.direccion = self.cleaned_data.get('direccion')
+            perfil.fecha_nacimiento = self.cleaned_data.get('fecha_nacimiento')
             perfil.save()
         return user
 
@@ -42,6 +48,11 @@ class ClientUpdateForm(forms.ModelForm):
     cedula = forms.CharField(max_length=20, required=False)
     telefono = forms.CharField(max_length=20, required=False)
     direccion = forms.CharField(max_length=255, required=False)
+    fecha_nacimiento = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        label='Fecha de Nacimiento',
+    )
 
     class Meta:
         model = User
@@ -56,6 +67,7 @@ class ClientUpdateForm(forms.ModelForm):
             self.fields['cedula'].initial = perfil.cedula
             self.fields['telefono'].initial = perfil.telefono
             self.fields['direccion'].initial = perfil.direccion
+            self.fields['fecha_nacimiento'].initial = perfil.fecha_nacimiento
 
         for field_name, field in self.fields.items():
             field.widget.attrs.update({'class': 'form-control'})
@@ -69,6 +81,7 @@ class ClientUpdateForm(forms.ModelForm):
             perfil.cedula = self.cleaned_data.get('cedula')
             perfil.telefono = self.cleaned_data.get('telefono')
             perfil.direccion = self.cleaned_data.get('direccion')
+            perfil.fecha_nacimiento = self.cleaned_data.get('fecha_nacimiento')
             perfil.save()
         return user
 
