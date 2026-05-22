@@ -73,7 +73,7 @@ def crear_pago_para_contado_y_credito(sender, instance, created, **kwargs):
     Si una póliza es NUEVA y de Contado/Crédito, crea el registro de Pago.
     Si se ACTUALIZA y sigue ACTIVA, recalcula el monto del Pago si la prima cambió.
     """
-    if instance.modo_pago in ['CONTADO', 'CREDITO']:
+    if instance.modo_pago in ['CONTADO', 'CREDITO', 'FINANCIADO']:
         comision_actual = instance.valor_comision
 
         if created:

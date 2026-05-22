@@ -22,10 +22,10 @@
             <i class="fas fa-shield-alt"></i>
             Lista de Tipos de Seguro
         </h3>
-        <span class="badge badge-primary">{{ tipos_seguro|length }} registros</span>
+        <span class="badge badge-primary">{{ tipos_de_seguro|length }} registros</span>
     </div>
     <div class="card-body p-0">
-        {% if tipos_seguro %}
+        {% if tipos_de_seguro %}
         <div class="table-container">
             <table class="data-table">
                 <thead>
@@ -38,7 +38,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% for tipo in tipos_seguro %}
+                {% for tipo in tipos_de_seguro %}
                     <tr>
                         <td>
                             <div class="table-cell-primary">{{ tipo.nombre }}</div>

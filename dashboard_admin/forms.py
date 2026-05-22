@@ -135,41 +135,16 @@ class CancelPolicyForm(forms.ModelForm):
 class VehiculoForm(forms.ModelForm):
     class Meta:
         model = Vehiculo
-        fields = ['cliente', 'placa', 'marca', 'modelo', 'ano', 'soat_vencimiento_recordatorio']
+        fields = ['cliente', 'placa', 'marca', 'modelo', 'ano',
+                  'soat_vencimiento_recordatorio']
 
         labels = {
             'modelo': 'Referencia',
             'ano': 'Modelo (Año)',
+            'soat_vencimiento_recordatorio': 'Vencimiento SOAT',
         }
 
         widgets = {
-            'soat_vencimiento_recordatorio': forms.DateInput(attrs={'type': 'date'}),
-        }
-
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Mostramos solo clientes, no administradores
-        self.fields['cliente'].queryset = User.objects.filter(is_staff=False)
-        for field in self.fields:
-            self.fields[field].widget.attrs.update({'class': 'form-control'})
-            
-class VehiculoForm(forms.ModelForm):
-    class Meta:
-        model = Vehiculo
-        # Usamos el nombre de campo correcto de tu modelo
-        fields = ['cliente', 'placa', 'marca', 'modelo', 'ano', 
-                  'soat_vencimiento_recordatorio'] 
-        
-        labels = {
-            'modelo': 'Referencia',
-            'ano': 'Modelo (Año)',
-            # Añadimos la etiqueta para el campo corregido
-            'soat_vencimiento_recordatorio': 'Recordatorio Vencimiento SOAT',
-        }
-        
-        widgets = {
-            # Usamos el nombre correcto aquí también
             'soat_vencimiento_recordatorio': forms.DateInput(attrs={'type': 'date'}),
         }
 

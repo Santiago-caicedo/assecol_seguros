@@ -98,7 +98,11 @@
                         <div class="form-error">{{ form.valor_prima_sin_iva.errors|striptags }}</div>
                         {% endif %}
                     </div>
-                    <div class="col-md-6"></div>
+                    <div class="col-md-6">
+                        <label for="valor_prima_con_iva" class="form-label">Valor Prima con IVA</label>
+                        <input type="text" id="valor_prima_con_iva" class="form-control" readonly placeholder="Se calcula automáticamente">
+                        <div class="form-text">Calculado a partir de la prima sin IVA y el % IVA del tipo de seguro.</div>
+                    </div>
                     <div class="col-md-6">
                         <label for="{{ form.fecha_inicio.id_for_label }}" class="form-label">Fecha de Inicio *</label>
                         {{ form.fecha_inicio }}
@@ -144,6 +148,20 @@
                         <div class="form-error">{{ form.plazo_meses.errors|striptags }}</div>
                         {% endif %}
                     </div>
+                    <div class="col-md-6 financiado-field" style="display: none;">
+                        <label for="{{ form.financiera.id_for_label }}" class="form-label">Financiera *</label>
+                        {{ form.financiera }}
+                        {% if form.financiera.errors %}
+                        <div class="form-error">{{ form.financiera.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 financiado-field" style="display: none;">
+                        <label for="{{ form.numero_credito.id_for_label }}" class="form-label">Número de Crédito *</label>
+                        {{ form.numero_credito }}
+                        {% if form.numero_credito.errors %}
+                        <div class="form-error">{{ form.numero_credito.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
@@ -163,20 +181,20 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Lógica para el Plazo en Meses
+    // Lógica para el Plazo en Meses y campos de Financiado
     const modoPagoSelect = document.getElementById('{{ form.modo_pago.id_for_label }}');
     const plazoContainer = document.getElementById('plazo-meses-container');
+    const financiadoFields = document.querySelectorAll('.financiado-field');
 
-    function togglePlazoVisibility() {
+    function toggleModoPagoFields() {
         const selectedValue = modoPagoSelect.value;
-        if (selectedValue === 'CREDITO' || selectedValue === 'MENSUAL') {
-            plazoContainer.style.display = 'block';
-        } else {
-            plazoContainer.style.display = 'none';
-        }
+        plazoContainer.style.display = (selectedValue === 'CREDITO' || selectedValue === 'MENSUAL') ? 'block' : 'none';
+        financiadoFields.forEach(el => {
+            el.style.display = (selectedValue === 'FINANCIADO') ? 'block' : 'none';
+        });
     }
-    togglePlazoVisibility();
-    modoPagoSelect.addEventListener('change', togglePlazoVisibility);
+    toggleModoPagoFields();
+    modoPagoSelect.addEventListener('change', toggleModoPagoFields);
 
     // Lógica para el campo Vehículo
     const tipoSeguroSelect = document.getElementById('{{ form.tipo_seguro.id_for_label }}');
@@ -196,6 +214,33 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     toggleVehiculoVisibility();
     tipoSeguroSelect.addEventListener('change', toggleVehiculoVisibility);
+
+    // Lógica para calcular la Prima con IVA en vivo
+    const ivaMap = {{ tipo_seguro_iva_map|safe }};
+    const primaInput = document.getElementById('{{ form.valor_prima_sin_iva.id_for_label }}');
+    const primaConIvaInput = document.getElementById('valor_prima_con_iva');
+
+    function formatCurrency(value) {
+        return new Intl.NumberFormat('es-CO', {
+            style: 'currency', currency: 'COP', minimumFractionDigits: 2
+        }).format(value);
+    }
+
+    function recalcularPrimaConIva() {
+        const prima = parseFloat(primaInput.value);
+        const tipoId = tipoSeguroSelect.value;
+        const porcentajeIva = ivaMap[tipoId];
+
+        if (!isNaN(prima) && porcentajeIva !== undefined) {
+            const total = prima + (prima * porcentajeIva / 100);
+            primaConIvaInput.value = formatCurrency(total);
+        } else {
+            primaConIvaInput.value = '';
+        }
+    }
+    recalcularPrimaConIva();
+    primaInput.addEventListener('input', recalcularPrimaConIva);
+    tipoSeguroSelect.addEventListener('change', recalcularPrimaConIva);
 });
 </script>
 {% endblock %}

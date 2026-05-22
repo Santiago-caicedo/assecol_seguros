@@ -55,11 +55,10 @@ def dashboard_home_view(request):
         fecha_fin__lte=fecha_limite_30_dias
     ).select_related('cliente', 'tipo_seguro').order_by('fecha_fin')
 
-    # 2. Recordatorios de SOAT que vencen en los próximos 15 días
-    fecha_limite_15_dias = hoy + timedelta(days=15)
+    # 2. Recordatorios de SOAT que vencen en los próximos 30 días
     soats_a_vencer = Vehiculo.objects.filter(
         soat_vencimiento_recordatorio__gte=hoy,
-        soat_vencimiento_recordatorio__lte=fecha_limite_15_dias
+        soat_vencimiento_recordatorio__lte=fecha_limite_30_dias
     ).select_related('cliente').order_by('soat_vencimiento_recordatorio')
 
     # El KPI de "Pólizas por Vencer" ahora puede usar el count de esta consulta
@@ -173,6 +172,9 @@ class PolicyCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         # Obtenemos el cliente de la URL para mostrarlo en la plantilla
         self.cliente = User.objects.get(pk=self.kwargs['pk'])
         context['cliente'] = self.cliente
+        context['tipo_seguro_iva_map'] = json.dumps({
+            str(t.pk): float(t.porcentaje_iva) for t in TipoSeguro.objects.all()
+        })
         return context
 
     def form_valid(self, form):
@@ -239,6 +241,9 @@ class PolicyUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         context['titulo'] = 'Editar Póliza'
         # El objeto self.object es la póliza que se está editando
         context['cliente'] = self.object.cliente
+        context['tipo_seguro_iva_map'] = json.dumps({
+            str(t.pk): float(t.porcentaje_iva) for t in TipoSeguro.objects.all()
+        })
         return context
 
     def get_success_url(self):

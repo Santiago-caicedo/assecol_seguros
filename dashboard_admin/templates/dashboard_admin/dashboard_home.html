@@ -69,7 +69,7 @@
             {% endif %}
         </div>
         <div class="stat-value">{{ lista_soats_a_vencer|length|default:0 }}</div>
-        <div class="stat-label">SOAT por Vencer (15 días)</div>
+        <div class="stat-label">SOAT por Vencer (30 días)</div>
         <div class="stat-footer">
             <a href="{% url 'dashboard_admin:lista_vehiculos' %}">Ver vehículos <i class="fas fa-arrow-right ms-1"></i></a>
         </div>
@@ -171,7 +171,7 @@
                         <i class="fas fa-check-circle" style="color: var(--color-success);"></i>
                     </div>
                     <div class="empty-state-title">Sin alertas</div>
-                    <div class="empty-state-description">No hay recordatorios de SOAT en los próximos 15 días.</div>
+                    <div class="empty-state-description">No hay recordatorios de SOAT en los próximos 30 días.</div>
                 </div>
                 {% endif %}
             </div>

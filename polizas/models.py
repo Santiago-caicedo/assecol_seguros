@@ -58,6 +58,7 @@ class Poliza(models.Model):
         ('CONTADO', 'De Contado'),
         ('CREDITO', 'A Crédito'),
         ('MENSUAL', 'Pago Mensual'),
+        ('FINANCIADO', 'Financiado'),
     ]
     ESTADO_POLIZA_CHOICES = [
         ('ACTIVA', 'Activa'),
@@ -91,6 +92,8 @@ class Poliza(models.Model):
     # --- Campos de Modalidad de Pago ---
     modo_pago = models.CharField('Modalidad de Pago', max_length=10, choices=MODO_PAGO_CHOICES, default='CONTADO')
     plazo_meses = models.PositiveIntegerField('Plazo en Meses', default=12, help_text="Relevante para pago a Crédito o Mensual")
+    financiera = models.CharField('Financiera', max_length=150, blank=True, help_text="Solo aplica si la modalidad es Financiado.")
+    numero_credito = models.CharField('Número de Crédito', max_length=50, blank=True, help_text="Solo aplica si la modalidad es Financiado.")
     # entidad_financiera lo añadiremos después si es necesario para simplificar ahora
     estado_cartera = models.CharField('Estado de Cartera', max_length=15, choices=ESTADO_CARTERA_CHOICES, default='AL_DIA')     
     # --- Campos de Estado y Cancelación ---
