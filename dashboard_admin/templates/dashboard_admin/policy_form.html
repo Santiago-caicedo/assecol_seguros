@@ -162,6 +162,13 @@
                         <div class="form-error">{{ form.numero_credito.errors|striptags }}</div>
                         {% endif %}
                     </div>
+                    <div class="col-md-6 contado-field" style="display: none;">
+                        <label for="{{ form.fecha_pago_contado.id_for_label }}" class="form-label">Fecha de Pago *</label>
+                        {{ form.fecha_pago_contado }}
+                        {% if form.fecha_pago_contado.errors %}
+                        <div class="form-error">{{ form.fecha_pago_contado.errors|striptags }}</div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
@@ -181,16 +188,20 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Lógica para el Plazo en Meses y campos de Financiado
+    // Lógica para el Plazo en Meses y campos de Financiado/Contado
     const modoPagoSelect = document.getElementById('{{ form.modo_pago.id_for_label }}');
     const plazoContainer = document.getElementById('plazo-meses-container');
     const financiadoFields = document.querySelectorAll('.financiado-field');
+    const contadoFields = document.querySelectorAll('.contado-field');
 
     function toggleModoPagoFields() {
         const selectedValue = modoPagoSelect.value;
         plazoContainer.style.display = (selectedValue === 'CREDITO' || selectedValue === 'MENSUAL') ? 'block' : 'none';
         financiadoFields.forEach(el => {
             el.style.display = (selectedValue === 'FINANCIADO') ? 'block' : 'none';
+        });
+        contadoFields.forEach(el => {
+            el.style.display = (selectedValue === 'CONTADO') ? 'block' : 'none';
         });
     }
     toggleModoPagoFields();

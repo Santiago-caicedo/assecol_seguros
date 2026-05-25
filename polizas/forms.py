@@ -20,11 +20,13 @@ class PolicyForm(forms.ModelForm):
             'plazo_meses',
             'financiera',
             'numero_credito',
+            'fecha_pago_contado',
         ]
 
         widgets = {
             'fecha_inicio': forms.DateInput(attrs={'type': 'date'}),
             'fecha_fin': forms.DateInput(attrs={'type': 'date'}),
+            'fecha_pago_contado': forms.DateInput(attrs={'type': 'date'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -39,17 +41,22 @@ class PolicyForm(forms.ModelForm):
         self.fields['asesor'].required = False
         self.fields['financiera'].required = False
         self.fields['numero_credito'].required = False
+        self.fields['fecha_pago_contado'].required = False
 
     def clean(self):
         cleaned_data = super().clean()
         modo_pago = cleaned_data.get('modo_pago')
         financiera = cleaned_data.get('financiera')
         numero_credito = cleaned_data.get('numero_credito')
+        fecha_pago_contado = cleaned_data.get('fecha_pago_contado')
 
         if modo_pago == 'FINANCIADO':
             if not financiera:
                 self.add_error('financiera', 'Requerido cuando la modalidad es Financiado.')
             if not numero_credito:
                 self.add_error('numero_credito', 'Requerido cuando la modalidad es Financiado.')
+
+        if modo_pago == 'CONTADO' and not fecha_pago_contado:
+            self.add_error('fecha_pago_contado', 'Requerido cuando la modalidad es De Contado.')
 
         return cleaned_data

@@ -80,9 +80,10 @@ def crear_pago_para_contado_y_credito(sender, instance, created, **kwargs):
             # Lógica de Creación
             if comision_actual and comision_actual > 0:
                 try:
+                    fecha_pago = instance.fecha_pago_contado if instance.modo_pago == 'CONTADO' and instance.fecha_pago_contado else instance.fecha_inicio
                     Pago.objects.create(
                         poliza=instance,
-                        fecha_pago=instance.fecha_inicio,
+                        fecha_pago=fecha_pago,
                         monto_pagado=comision_actual,
                         estado_comision='PENDIENTE',
                         notas='Registro de comisión generado automáticamente al crear la póliza.'
