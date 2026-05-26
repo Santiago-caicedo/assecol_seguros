@@ -31,7 +31,8 @@ class Vehiculo(models.Model):
 
 class CompaniaAseguradora(models.Model):
     nombre = models.CharField(max_length=150, unique=True)
-    # Puedes añadir más campos en el futuro, como NIT, contacto, etc.
+    contacto = models.CharField('Contacto', max_length=150, blank=True)
+    telefono = models.CharField('Teléfono', max_length=30, blank=True)
 
     class Meta:
         verbose_name = "Compañía Aseguradora"
@@ -40,11 +41,12 @@ class CompaniaAseguradora(models.Model):
 
     def __str__(self):
         return self.nombre
-    
+
 
 class Asesor(models.Model):
     nombre_completo = models.CharField(max_length=200, unique=True)
-    # Puedes añadir más campos en el futuro, como cédula, fecha de ingreso, etc.
+    email = models.EmailField('Email', blank=True)
+    telefono = models.CharField('Teléfono', max_length=30, blank=True)
 
     class Meta:
         ordering = ['nombre_completo']

@@ -104,7 +104,7 @@ class TipoSeguroForm(forms.ModelForm):
 class CompaniaAseguradoraForm(forms.ModelForm):
     class Meta:
         model = CompaniaAseguradora
-        fields = ['nombre']
+        fields = ['nombre', 'contacto', 'telefono']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -112,17 +112,38 @@ class CompaniaAseguradoraForm(forms.ModelForm):
             'class': 'form-control',
             'placeholder': 'Ej: Seguros Sura'
         })
+        self.fields['contacto'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Nombre del contacto (opcional)'
+        })
+        self.fields['telefono'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Ej: +57 300 123 4567'
+        })
     
 
 
 class CancelPolicyForm(forms.ModelForm):
     class Meta:
         model = Poliza
-        # El único campo que el admin llenará es el motivo
-        fields = ['motivo_cancelacion']
+        fields = ['motivo_cancelacion', 'monto_devolucion', 'comision_devuelta']
+        widgets = {
+            'monto_devolucion': forms.NumberInput(attrs={'step': '0.01', 'min': '0'}),
+            'comision_devuelta': forms.NumberInput(attrs={'step': '0.01', 'min': '0'}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['monto_devolucion'].required = False
+        self.fields['comision_devuelta'].required = False
+        self.fields['monto_devolucion'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': '0.00 (opcional)',
+        })
+        self.fields['comision_devuelta'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': '0.00 (opcional)',
+        })
         self.fields['motivo_cancelacion'].widget.attrs.update({
             'class': 'form-control',
             'rows': 4,
@@ -207,13 +228,21 @@ class FotoSiniestroForm(forms.ModelForm):
 class AsesorForm(forms.ModelForm):
     class Meta:
         model = Asesor
-        fields = ['nombre_completo']
+        fields = ['nombre_completo', 'email', 'telefono']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['nombre_completo'].widget.attrs.update({
             'class': 'form-control',
             'placeholder': 'Ej: Juan David Pérez'
+        })
+        self.fields['email'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'asesor@ejemplo.com'
+        })
+        self.fields['telefono'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Ej: +57 300 123 4567'
         })
 
 

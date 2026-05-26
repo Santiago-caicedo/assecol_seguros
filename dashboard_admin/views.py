@@ -36,6 +36,29 @@ def es_admin(user):
     return user.is_staff
 
 
+def recalcular_estado_cartera(poliza):
+    """Recalcula y persiste el estado_cartera según el estado de las cuotas.
+
+    Reglas: si todas las cuotas están PAGADAS → PAGO_COMPLETO; si alguna está
+    EN_MORA → EN_MORA; en cualquier otro caso → AL_DIA. No aplica si la póliza
+    no es MENSUAL (no tiene cuotas).
+    """
+    if poliza.modo_pago != 'MENSUAL':
+        return
+    cuotas = poliza.cuotas.all()
+    if not cuotas.exists():
+        return
+    if cuotas.filter(estado='EN_MORA').exists():
+        nuevo = 'EN_MORA'
+    elif not cuotas.exclude(estado='PAGADA').exists():
+        nuevo = 'PAGO_COMPLETO'
+    else:
+        nuevo = 'AL_DIA'
+    if poliza.estado_cartera != nuevo:
+        poliza.estado_cartera = nuevo
+        poliza.save(update_fields=['estado_cartera'])
+
+
 @login_required
 @user_passes_test(es_admin)
 def dashboard_home_view(request):
@@ -254,7 +277,51 @@ class PolicyUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         # El objeto self.object es la póliza que se acaba de guardar
         cliente_pk = self.object.cliente.pk
         return reverse_lazy('dashboard_admin:lista_polizas_cliente', kwargs={'pk': cliente_pk})
-    
+
+    def form_valid(self, form):
+        from django.contrib import messages
+        from django.db import transaction
+
+        modo_anterior = Poliza.objects.values_list('modo_pago', flat=True).get(pk=self.object.pk)
+        modo_nuevo = form.cleaned_data.get('modo_pago')
+
+        if modo_anterior != modo_nuevo:
+            error = self._validar_y_limpiar_artefactos(self.object, modo_anterior, modo_nuevo)
+            if error:
+                messages.error(self.request, error)
+                return self.form_invalid(form)
+
+        with transaction.atomic():
+            return super().form_valid(form)
+
+    def _validar_y_limpiar_artefactos(self, poliza, modo_anterior, modo_nuevo):
+        """Limpia cuotas/pagos del modo anterior. Retorna mensaje de error si bloquea."""
+        if modo_anterior == 'MENSUAL':
+            cuotas = poliza.cuotas.all()
+            if cuotas.filter(estado='PAGADA').exists():
+                return (
+                    "No se puede cambiar la modalidad porque hay cuotas ya pagadas. "
+                    "Reversa los pagos primero o cancela la póliza."
+                )
+            Pago.objects.filter(poliza=poliza, cuota__isnull=False).delete()
+            cuotas.delete()
+            logger.info(
+                f"Plan de cuotas eliminado de póliza #{poliza.numero_poliza} "
+                f"por cambio de modalidad MENSUAL → {modo_nuevo}"
+            )
+        else:
+            # CONTADO/CREDITO/FINANCIADO → otro modo
+            pagos_no_cuota = Pago.objects.filter(poliza=poliza, cuota__isnull=True)
+            if pagos_no_cuota.filter(estado_comision='LIQUIDADA').exists():
+                return (
+                    "No se puede cambiar la modalidad porque la comisión original ya está liquidada."
+                )
+            pagos_no_cuota.delete()
+            logger.info(
+                f"Pago de comisión eliminado de póliza #{poliza.numero_poliza} "
+                f"por cambio de modalidad {modo_anterior} → {modo_nuevo}"
+            )
+        return None
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
@@ -399,85 +466,117 @@ class PolicyCancelView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     
 
     def form_valid(self, form):
+        from django.db import transaction
         poliza = form.save(commit=False)
+
+        if poliza.estado == 'CANCELADA':
+            # Defensa contra doble-submit / concurrencia
+            return redirect(self.get_success_url())
+
         poliza.estado = 'CANCELADA'
         poliza.fecha_cancelacion = timezone.now().date()
 
-        if poliza.modo_pago == 'CONTADO':
-            devolucion, comision_devuelta = poliza.calcular_prorrateo_cancelacion()
-            if devolucion is not None:
-                poliza.monto_devolucion = devolucion
-                poliza.comision_devuelta = comision_devuelta
+        with transaction.atomic():
+            if poliza.modo_pago == 'CONTADO':
+                # Prorrateo automático; pisa cualquier valor manual del form.
+                devolucion, comision_devuelta = poliza.calcular_prorrateo_cancelacion()
+                if devolucion is not None:
+                    poliza.monto_devolucion = devolucion
+                    poliza.comision_devuelta = comision_devuelta
 
-                try:
-                    # Buscamos el registro de Pago original
-                    pago_a_modificar = Pago.objects.get(poliza=poliza, cuota__isnull=True)
-                    
-                    # Calculamos la comisión que realmente se ganó
                     comision_real_ganada = poliza.valor_comision - comision_devuelta
-                    
-                    # Actualizamos el monto del pago para que refleje la comisión real
-                    pago_a_modificar.monto_pagado = comision_real_ganada
-                    pago_a_modificar.save()
+                    pagos_originales = Pago.objects.filter(poliza=poliza, cuota__isnull=True)
+                    pago_a_modificar = pagos_originales.first()
 
-                except Pago.DoesNotExist:
-                    logger.warning(
-                        f"No se encontró registro de Pago para ajustar en cancelación "
-                        f"de póliza #{poliza.numero_poliza}"
-                    )
-                except Exception as e:
-                    logger.exception(
-                        f"Error al ajustar pago tras cancelación de póliza "
-                        f"#{poliza.numero_poliza}: {e}"
-                    )
+                    if pago_a_modificar is None:
+                        logger.warning(
+                            f"No se encontró registro de Pago para ajustar en cancelación "
+                            f"de póliza #{poliza.numero_poliza}"
+                        )
+                    else:
+                        if pago_a_modificar.estado_comision == 'LIQUIDADA':
+                            logger.warning(
+                                f"Pago de póliza #{poliza.numero_poliza} ya está LIQUIDADO; "
+                                f"se registra devolución pero no se modifica el monto."
+                            )
+                        else:
+                            monto_original = pago_a_modificar.monto_pagado
+                            pago_a_modificar.monto_pagado = comision_real_ganada
+                            nota_adicional = (
+                                f"\n[Ajuste por cancelación {poliza.fecha_cancelacion}: "
+                                f"monto comisión {monto_original} → {comision_real_ganada}, "
+                                f"comisión devuelta {comision_devuelta}]"
+                            )
+                            pago_a_modificar.notas = (pago_a_modificar.notas or '') + nota_adicional
+                            pago_a_modificar.save(
+                                update_fields=['monto_pagado', 'notas']
+                            )
 
-        # Guardamos la póliza con todos los cambios (estado, fecha, montos de devolución)
-        poliza.save()
-        
-        # --- LÓGICA DE ENVÍO DE CORREOS DE CANCELACIÓN ---
-        try:
-            contexto_email = {'poliza': poliza}
+                        if pagos_originales.count() > 1:
+                            logger.warning(
+                                f"Póliza #{poliza.numero_poliza} tiene múltiples Pagos sin cuota; "
+                                f"solo se ajustó el primero."
+                            )
 
-            # Correo para el Cliente
-            cuerpo_html_cliente = render_to_string('emails/cancelacion_poliza_cliente.html', contexto_email)
-            asunto_cliente = f"Confirmación de Cancelación de tu Póliza #{poliza.numero_poliza}"
-            email_cliente = EmailMessage(
-                asunto_cliente,
-                cuerpo_html_cliente,
-                settings.DEFAULT_FROM_EMAIL,
-                [poliza.cliente.email]
-            )
-            email_cliente.content_subtype = "html"
-            email_cliente.send()
+            poliza.save()
             logger.info(
-                f"Correo de cancelación enviado a cliente {poliza.cliente.email} "
-                f"para póliza #{poliza.numero_poliza}"
+                f"Póliza #{poliza.numero_poliza} cancelada por {self.request.user.username} "
+                f"con motivo: {poliza.motivo_cancelacion[:80]}"
             )
 
-            # Correo para el Admin
-            if settings.ADMIN_EMAIL:
-                cuerpo_html_admin = render_to_string('emails/cancelacion_poliza_admin.html', contexto_email)
-                asunto_admin = f"Notificación: Póliza Cancelada - {poliza.cliente.get_full_name()}"
-                email_admin = EmailMessage(
-                    asunto_admin,
-                    cuerpo_html_admin,
+        # Emails fuera de la transacción: un fallo aquí no debe revertir la cancelación.
+        self._enviar_correos_cancelacion(poliza)
+
+        return redirect(self.get_success_url())
+
+    def _enviar_correos_cancelacion(self, poliza):
+        contexto_email = {'poliza': poliza}
+
+        if poliza.cliente.email:
+            try:
+                cuerpo = render_to_string('emails/cancelacion_poliza_cliente.html', contexto_email)
+                msg = EmailMessage(
+                    f"Confirmación de Cancelación de tu Póliza #{poliza.numero_poliza}",
+                    cuerpo,
                     settings.DEFAULT_FROM_EMAIL,
-                    [settings.ADMIN_EMAIL]
+                    [poliza.cliente.email],
                 )
-                email_admin.content_subtype = "html"
-                email_admin.send()
-                logger.info(f"Notificación de cancelación enviada a admin para póliza #{poliza.numero_poliza}")
-
-        except Exception as e:
-            logger.exception(
-                f"Error al enviar correos de cancelación para póliza #{poliza.numero_poliza} "
-                f"(cliente: {poliza.cliente.email}): {e}"
+                msg.content_subtype = "html"
+                msg.send()
+                logger.info(
+                    f"Correo de cancelación enviado a {poliza.cliente.email} "
+                    f"para póliza #{poliza.numero_poliza}"
+                )
+            except Exception as e:
+                logger.exception(
+                    f"Error enviando correo de cancelación al cliente "
+                    f"({poliza.cliente.email}) para póliza #{poliza.numero_poliza}: {e}"
+                )
+        else:
+            logger.warning(
+                f"Cliente {poliza.cliente.username} sin email; "
+                f"no se notificó cancelación de póliza #{poliza.numero_poliza}"
             )
-            # No re-lanzamos la excepción para no interrumpir el flujo de cancelación
-            # ya que la póliza ya fue cancelada correctamente
 
-        # El super().form_valid() llama al .save() del formulario original
-        return super().form_valid(form)
+        admin_email = getattr(settings, 'ADMIN_EMAIL', None) or getattr(settings, 'EMAIL_ADMIN_NOTIFICACIONES', None)
+        if admin_email:
+            try:
+                cuerpo = render_to_string('emails/cancelacion_poliza_admin.html', contexto_email)
+                msg = EmailMessage(
+                    f"Notificación: Póliza Cancelada - {poliza.cliente.get_full_name()}",
+                    cuerpo,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [admin_email],
+                )
+                msg.content_subtype = "html"
+                msg.send()
+                logger.info(
+                    f"Notificación de cancelación enviada a admin para póliza #{poliza.numero_poliza}"
+                )
+            except Exception as e:
+                logger.exception(
+                    f"Error enviando notificación admin para póliza #{poliza.numero_poliza}: {e}"
+                )
 
     def get_success_url(self):
         cliente_pk = self.object.cliente.pk
@@ -556,36 +655,31 @@ class PolicyPortfolioDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailV
 @user_passes_test(es_admin)
 @require_POST
 def marcar_cuota_pagada_view(request, pk):
+    from django.db import transaction
     cuota = get_object_or_404(Cuota, pk=pk)
     poliza = cuota.poliza
 
-    # Actualizamos el estado de la cuota del cliente
-    cuota.estado = 'PAGADA'
-    cuota.save()
+    if cuota.estado == 'PAGADA':
+        # Idempotencia: ya está pagada, no creamos otro Pago.
+        return redirect('dashboard_admin:detalle_cartera_poliza', pk=poliza.pk)
 
-    # --- LÓGICA DE COMISIÓN CORREGIDA ---
+    with transaction.atomic():
+        cuota.estado = 'PAGADA'
+        cuota.save(update_fields=['estado'])
 
-    # 1. Calculamos la porción de comisión para esta cuota específica
-    porcentaje_comision = poliza.tipo_seguro.comision_porcentaje / 100
-    comision_de_la_cuota = cuota.monto_cuota * porcentaje_comision
+        porcentaje_comision = poliza.tipo_seguro.comision_porcentaje / 100
+        comision_de_la_cuota = cuota.monto_cuota * porcentaje_comision
 
-    # 2. Creamos un registro de Pago por el valor de la COMISIÓN de la cuota
-    Pago.objects.create(
-        poliza=poliza,
-        cuota=cuota,
-        fecha_pago=timezone.now().date(),
-        monto_pagado=comision_de_la_cuota, # <-- CAMBIO CLAVE
-        estado_comision='PENDIENTE',
-        notas=f"Comisión generada por el pago de la cuota #{cuota.numero_cuota}."
-    )
+        Pago.objects.create(
+            poliza=poliza,
+            cuota=cuota,
+            fecha_pago=timezone.now().date(),
+            monto_pagado=comision_de_la_cuota,
+            estado_comision='PENDIENTE',
+            notas=f"Comisión generada por el pago de la cuota #{cuota.numero_cuota}."
+        )
 
-    # Después de pagar, revisamos si todavía quedan cuotas en mora
-    otras_cuotas_en_mora = poliza.cuotas.filter(estado='EN_MORA').exists()
-
-    if not otras_cuotas_en_mora:
-        # Si ya no hay cuotas en mora, la póliza vuelve a estar al día
-        poliza.estado_cartera = 'AL_DIA'
-        poliza.save()
+        recalcular_estado_cartera(poliza)
 
     return redirect('dashboard_admin:detalle_cartera_poliza', pk=poliza.pk)
 
@@ -839,31 +933,37 @@ def delete_foto_view(request, pk):
 @user_passes_test(es_admin)
 @require_POST
 def revertir_pago_cuota_view(request, pk):
+    from django.contrib import messages
+    from django.db import transaction
     cuota = get_object_or_404(Cuota, pk=pk)
     poliza = cuota.poliza
 
-    # 1. Revertimos el estado de la cuota a Pendiente
-    cuota.estado = 'PENDIENTE'
-    cuota.save()
+    if cuota.estado != 'PAGADA':
+        # Solo se puede revertir lo que estaba pagado.
+        return redirect('dashboard_admin:detalle_cartera_poliza', pk=poliza.pk)
 
-    # 2. Buscamos y eliminamos el registro de Pago asociado a esta cuota
-    Pago.objects.filter(cuota=cuota).delete()
+    pagos_asociados = Pago.objects.filter(cuota=cuota)
+    if pagos_asociados.filter(estado_comision='LIQUIDADA').exists():
+        messages.error(
+            request,
+            f"No se puede revertir la cuota #{cuota.numero_cuota}: ya tiene comisiones liquidadas. "
+            "Desmarca primero las liquidaciones."
+        )
+        return redirect('dashboard_admin:detalle_cartera_poliza', pk=poliza.pk)
 
-    # 3. Opcional: Re-evaluamos el estado de la póliza por si ahora entra en mora
-    # (Esto es útil si la fecha de la cuota revertida ya pasó)
-    hoy = timezone.now().date()
-    cuotas_vencidas_no_pagadas = poliza.cuotas.filter(
-        fecha_vencimiento__lt=hoy,
-        estado__in=['PENDIENTE', 'EN_MORA']
-    ).exists()
+    with transaction.atomic():
+        cuota.estado = 'PENDIENTE'
+        cuota.save(update_fields=['estado'])
 
-    if cuotas_vencidas_no_pagadas:
-        poliza.estado_cartera = 'EN_MORA'
-    else:
-        poliza.estado_cartera = 'AL_DIA'
-    poliza.save()
+        cuenta = pagos_asociados.count()
+        pagos_asociados.delete()
+        logger.info(
+            f"Revertido pago de cuota #{cuota.numero_cuota} póliza #{poliza.numero_poliza} "
+            f"por usuario {request.user.username}: {cuenta} Pago(s) eliminado(s)."
+        )
 
-    # Redirigimos de vuelta a la página de detalle de cartera
+        recalcular_estado_cartera(poliza)
+
     return redirect('dashboard_admin:detalle_cartera_poliza', pk=poliza.pk)
 
 

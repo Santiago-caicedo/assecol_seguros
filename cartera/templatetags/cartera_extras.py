@@ -4,13 +4,13 @@ register = template.Library()
 
 @register.filter
 def calcular_comision(pago):
-    """
-    Calcula la comisión ganada para un objeto de Pago.
-    Recibe un objeto 'pago' y devuelve el valor de la comisión.
+    """Devuelve la comisión registrada en el Pago.
+
+    Por diseño actual, Pago.monto_pagado YA es la comisión generada (ver signal
+    crear_pago_para_contado_y_credito y marcar_cuota_pagada_view), no la prima
+    pagada por el cliente.
     """
     try:
-        comision = pago.monto_pagado * (pago.poliza.tipo_seguro.comision_porcentaje / 100)
-        return comision
-    except (TypeError, AttributeError):
-        # En caso de que falte algún dato, devuelve 0
+        return pago.monto_pagado or 0
+    except AttributeError:
         return 0

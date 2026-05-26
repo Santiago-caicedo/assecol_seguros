@@ -49,6 +49,19 @@ class PolicyForm(forms.ModelForm):
         financiera = cleaned_data.get('financiera')
         numero_credito = cleaned_data.get('numero_credito')
         fecha_pago_contado = cleaned_data.get('fecha_pago_contado')
+        fecha_inicio = cleaned_data.get('fecha_inicio')
+        fecha_fin = cleaned_data.get('fecha_fin')
+        valor_prima = cleaned_data.get('valor_prima_sin_iva')
+        plazo_meses = cleaned_data.get('plazo_meses')
+
+        if fecha_inicio and fecha_fin and fecha_fin <= fecha_inicio:
+            self.add_error('fecha_fin', 'La fecha de fin debe ser posterior a la fecha de inicio.')
+
+        if valor_prima is not None and valor_prima <= 0:
+            self.add_error('valor_prima_sin_iva', 'El valor de la prima debe ser mayor a cero.')
+
+        if modo_pago in ('CREDITO', 'MENSUAL') and (not plazo_meses or plazo_meses <= 0):
+            self.add_error('plazo_meses', 'El plazo en meses debe ser mayor a cero para esta modalidad.')
 
         if modo_pago == 'FINANCIADO':
             if not financiera:
