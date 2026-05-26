@@ -1,5 +1,6 @@
 # dashboard_admin/views.py
 import logging
+from decimal import Decimal
 from django.http import Http404
 from django.shortcuts import render
 from django.views.generic import ListView,  CreateView, UpdateView, UpdateView, DeleteView, DetailView
@@ -156,26 +157,41 @@ class ClientPolicyListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     context_object_name = 'polizas'
 
     def test_func(self):
-        """Misma prueba de seguridad: solo para administradores."""
         return self.request.user.is_staff
 
     def get_queryset(self):
-        """
-        Filtra las pólizas para mostrar solo las del cliente
-        cuya PK viene en la URL.
-        """
-        # Obtenemos el usuario (cliente) basado en la 'pk' de la URL
-        self.cliente = User.objects.get(pk=self.kwargs['pk'])
-        # Devolvemos solo las pólizas de ese cliente
-        return Poliza.objects.filter(cliente=self.cliente)
+        self.cliente = get_object_or_404(User, pk=self.kwargs['pk'])
+        return (
+            Poliza.objects
+            .filter(cliente=self.cliente)
+            .select_related('tipo_seguro', 'compania_aseguradora', 'asesor', 'vehiculo')
+            .order_by('-fecha_fin')
+        )
 
     def get_context_data(self, **kwargs):
-        """
-        Añadimos el objeto del cliente al contexto para poder
-        mostrar su nombre en el título de la plantilla.
-        """
         context = super().get_context_data(**kwargs)
-        context['cliente'] = self.cliente
+        polizas = context['polizas']
+        hoy = timezone.now().date()
+        limite_30d = hoy + timedelta(days=30)
+
+        activas = [p for p in polizas if p.estado == 'ACTIVA']
+        vencidas = [p for p in polizas if p.estado == 'VENCIDA']
+        canceladas = [p for p in polizas if p.estado == 'CANCELADA']
+        por_vencer = [p for p in activas if hoy <= p.fecha_fin <= limite_30d]
+
+        valor_total_activas = sum((p.valor_total_a_pagar for p in activas), Decimal('0'))
+
+        context.update({
+            'cliente': self.cliente,
+            'total_polizas': len(polizas),
+            'total_activas': len(activas),
+            'total_vencidas': len(vencidas),
+            'total_canceladas': len(canceladas),
+            'total_por_vencer': len(por_vencer),
+            'valor_total_activas': valor_total_activas,
+            'hoy': hoy,
+            'limite_30d': limite_30d,
+        })
         return context
 
 

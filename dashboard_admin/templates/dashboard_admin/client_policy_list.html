@@ -5,150 +5,498 @@
 {% block page_title %}Pólizas del Cliente{% endblock %}
 
 {% block dashboard_content %}
-<!-- Header Actions -->
+<style>
+    .client-hero {
+        background: linear-gradient(135deg, var(--assecol-primary, #FE7C04) 0%, #ff9333 100%);
+        color: #fff;
+        border-radius: 12px;
+        padding: 24px 28px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 12px rgba(254, 124, 4, 0.18);
+    }
+    .client-hero .avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+        flex-shrink: 0;
+    }
+    .client-hero h2 { font-size: 22px; margin: 0; font-weight: 600; }
+    .client-hero .client-meta { opacity: 0.9; font-size: 13.5px; margin-top: 6px; }
+    .client-hero .client-meta span { margin-right: 18px; }
+    .client-hero .btn-hero {
+        background: rgba(255,255,255,0.22);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.35);
+        backdrop-filter: blur(4px);
+    }
+    .client-hero .btn-hero:hover { background: rgba(255,255,255,0.32); color: #fff; }
+    .client-hero .btn-hero-primary {
+        background: #fff;
+        color: var(--assecol-primary, #FE7C04);
+        border: none;
+        font-weight: 600;
+    }
+    .client-hero .btn-hero-primary:hover { background: #f9f9f9; }
+
+    .kpi-strip {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .kpi-card {
+        background: #fff;
+        border: 1px solid var(--gray-200, #e5e7eb);
+        border-radius: 10px;
+        padding: 18px 20px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .kpi-card .kpi-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+    .kpi-card .kpi-value { font-size: 22px; font-weight: 700; color: var(--gray-900, #111827); line-height: 1; }
+    .kpi-card .kpi-label { font-size: 12px; color: var(--gray-500, #6b7280); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .kpi-icon.bg-primary-soft { background: rgba(254, 124, 4, 0.12); color: var(--assecol-primary, #FE7C04); }
+    .kpi-icon.bg-success-soft { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+    .kpi-icon.bg-warning-soft { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
+    .kpi-icon.bg-info-soft { background: rgba(59, 130, 246, 0.12); color: #3b82f6; }
+
+    .filter-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    .filter-tab {
+        background: #fff;
+        border: 1px solid var(--gray-200, #e5e7eb);
+        color: var(--gray-700, #374151);
+        padding: 8px 16px;
+        border-radius: 999px;
+        font-size: 13.5px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.15s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .filter-tab:hover { border-color: var(--assecol-primary, #FE7C04); color: var(--assecol-primary, #FE7C04); }
+    .filter-tab.active {
+        background: var(--assecol-primary, #FE7C04);
+        border-color: var(--assecol-primary, #FE7C04);
+        color: #fff;
+    }
+    .filter-tab .count {
+        background: rgba(0,0,0,0.08);
+        padding: 1px 8px;
+        border-radius: 999px;
+        font-size: 11.5px;
+        font-weight: 600;
+    }
+    .filter-tab.active .count { background: rgba(255,255,255,0.25); color: #fff; }
+
+    .policies-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 18px;
+    }
+    .policy-card {
+        background: #fff;
+        border: 1px solid var(--gray-200, #e5e7eb);
+        border-radius: 12px;
+        padding: 20px;
+        transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+    }
+    .policy-card:hover {
+        border-color: var(--assecol-primary, #FE7C04);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+        transform: translateY(-2px);
+    }
+    .policy-card .accent-bar {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 4px;
+    }
+    .policy-card.estado-ACTIVA .accent-bar { background: #10b981; }
+    .policy-card.estado-VENCIDA .accent-bar { background: #ef4444; }
+    .policy-card.estado-CANCELADA .accent-bar { background: #9ca3af; }
+    .policy-card.por-vencer .accent-bar { background: linear-gradient(90deg, #10b981 0%, #f59e0b 100%); }
+
+    .policy-head { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 4px; }
+    .policy-tipo {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--gray-900, #111827);
+        line-height: 1.3;
+    }
+    .policy-numero {
+        font-size: 12px;
+        color: var(--gray-500, #6b7280);
+        margin-top: 2px;
+        font-family: 'SF Mono', Monaco, monospace;
+    }
+
+    .policy-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        font-size: 13.5px;
+    }
+    .policy-row .label { color: var(--gray-500, #6b7280); display: inline-flex; align-items: center; gap: 6px; }
+    .policy-row .value { color: var(--gray-800, #1f2937); font-weight: 500; text-align: right; }
+
+    .policy-divider { border-top: 1px dashed var(--gray-200, #e5e7eb); margin: 12px 0; }
+
+    .policy-amount {
+        background: var(--gray-50, #f9fafb);
+        border-radius: 8px;
+        padding: 14px 16px;
+        margin: 12px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .policy-amount .label { font-size: 12px; color: var(--gray-500, #6b7280); text-transform: uppercase; letter-spacing: 0.5px; }
+    .policy-amount .value { font-size: 18px; font-weight: 700; color: var(--gray-900, #111827); }
+
+    .policy-footer {
+        margin-top: auto;
+        padding-top: 14px;
+        border-top: 1px solid var(--gray-100, #f3f4f6);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .badge-soft { font-size: 11.5px; padding: 4px 10px; border-radius: 999px; font-weight: 600; }
+    .badge-soft.activa { background: rgba(16,185,129,0.12); color: #047857; }
+    .badge-soft.vencida { background: rgba(239,68,68,0.12); color: #b91c1c; }
+    .badge-soft.cancelada { background: rgba(156,163,175,0.18); color: #4b5563; }
+    .badge-soft.por-vencer { background: rgba(245,158,11,0.15); color: #92400e; }
+    .badge-soft.cartera-mora { background: rgba(239,68,68,0.12); color: #b91c1c; }
+    .badge-soft.cartera-aldia { background: rgba(16,185,129,0.12); color: #047857; }
+    .badge-soft.cartera-completo { background: rgba(59,130,246,0.12); color: #1d4ed8; }
+
+    .icon-btn {
+        width: 32px; height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        border: 1px solid var(--gray-200, #e5e7eb);
+        color: var(--gray-600, #4b5563);
+        background: #fff;
+        transition: all 0.15s;
+        text-decoration: none;
+        font-size: 13px;
+    }
+    .icon-btn:hover { border-color: var(--assecol-primary, #FE7C04); color: var(--assecol-primary, #FE7C04); }
+    .icon-btn.danger:hover { border-color: #ef4444; color: #ef4444; }
+    .icon-btn-group { display: flex; gap: 6px; }
+
+    .empty-policies {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--gray-500, #6b7280);
+    }
+    .empty-policies i { font-size: 48px; color: var(--gray-300, #d1d5db); margin-bottom: 16px; }
+</style>
+
+<!-- Volver -->
 <div class="page-header">
     <div class="page-header-actions">
         <a href="{% url 'dashboard_admin:lista_clientes' %}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i>
-            Volver a Clientes
+            <i class="fas fa-arrow-left"></i> Volver a Clientes
         </a>
     </div>
 </div>
 
-<!-- Client Info Card -->
-<div class="card mb-4">
-    <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-3">
-                <div class="stat-icon icon-primary" style="width: 56px; height: 56px; font-size: 20px;">
-                    <i class="fas fa-user"></i>
-                </div>
-                <div>
-                    <h3 style="margin: 0; color: var(--gray-900); font-size: 20px;">{{ cliente.get_full_name|default:cliente.username }}</h3>
-                    <p style="margin: 4px 0 0 0; color: var(--gray-500); font-size: 14px;">
-                        <i class="fas fa-envelope"></i> {{ cliente.email|default:"-" }}
-                        &nbsp;·&nbsp;
-                        <i class="fas fa-phone"></i> {{ cliente.perfilcliente.telefono|default:"N/A" }}
-                    </p>
+<!-- Hero: Cliente -->
+<div class="client-hero">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <div class="avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div>
+                <h2>{{ cliente.get_full_name|default:cliente.username }}</h2>
+                <div class="client-meta">
+                    {% if cliente.email %}<span><i class="fas fa-envelope"></i> {{ cliente.email }}</span>{% endif %}
+                    {% if cliente.perfilcliente.telefono %}<span><i class="fas fa-phone"></i> {{ cliente.perfilcliente.telefono }}</span>{% endif %}
+                    {% if cliente.perfilcliente.cedula %}<span><i class="fas fa-id-card"></i> {{ cliente.perfilcliente.cedula }}</span>{% endif %}
                 </div>
             </div>
-            <div class="d-flex gap-2">
-                <a href="{% url 'dashboard_admin:editar_cliente' pk=cliente.pk %}" class="btn btn-secondary">
-                    <i class="fas fa-edit"></i>
-                    Editar Cliente
-                </a>
-                <a href="{% url 'dashboard_admin:crear_poliza_cliente' pk=cliente.pk %}" class="btn btn-primary">
-                    <i class="fas fa-plus"></i>
-                    Nueva Póliza
-                </a>
-            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'dashboard_admin:editar_cliente' pk=cliente.pk %}" class="btn btn-hero">
+                <i class="fas fa-edit"></i> Editar
+            </a>
+            <a href="{% url 'dashboard_admin:crear_poliza_cliente' pk=cliente.pk %}" class="btn btn-hero-primary">
+                <i class="fas fa-plus"></i> Nueva Póliza
+            </a>
         </div>
     </div>
 </div>
 
-<!-- Policies Section -->
-<div class="card">
-    <div class="card-header">
-        <h3 class="card-title">
-            <i class="fas fa-file-contract"></i>
-            Pólizas Registradas
-        </h3>
-        <span class="badge badge-primary">{{ polizas.count }} pólizas</span>
-    </div>
-    <div class="card-body">
-        {% if polizas %}
-        <div class="row g-4">
-            {% for poliza in polizas %}
-            <div class="col-md-6">
-                <div class="card h-100" style="border: 1px solid var(--gray-200);">
-                    <div class="card-body">
-                        <!-- Header -->
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div class="table-cell-primary" style="color: var(--assecol-primary);">
-                                {{ poliza.tipo_seguro.nombre }}
-                            </div>
-                            {% if poliza.estado == 'ACTIVA' %}
-                            <span class="badge badge-success">Activa</span>
-                            {% elif poliza.estado == 'CANCELADA' %}
-                            <span class="badge badge-neutral">Cancelada</span>
-                            {% elif poliza.estado == 'VENCIDA' %}
-                            <span class="badge badge-danger">Vencida</span>
-                            {% endif %}
-                        </div>
-
-                        <p class="table-cell-secondary mb-2">Póliza #{{ poliza.numero_poliza }}</p>
-
-                        {% if poliza.vehiculo %}
-                        <p class="table-cell-secondary mb-2">
-                            <i class="fas fa-car"></i>
-                            Vehículo: <strong>{{ poliza.vehiculo.placa }}</strong>
-                        </p>
-                        {% endif %}
-
-                        {% if poliza.estado == 'CANCELADA' and poliza.monto_devolucion %}
-                        <div class="alert alert-info" style="font-size: 13px; padding: 12px; margin-bottom: 16px;">
-                            <i class="fas fa-info-circle"></i>
-                            Devolución al cliente: <strong>${{ poliza.monto_devolucion|intcomma }}</strong>
-                        </div>
-                        {% endif %}
-
-                        <hr style="margin: 16px 0; border-color: var(--gray-100);">
-
-                        <!-- Dates -->
-                        <div class="d-flex justify-content-between mb-3">
-                            <div>
-                                <div class="table-cell-secondary" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Inicio</div>
-                                <div class="table-cell-primary">{{ poliza.fecha_inicio|date:"d M, Y" }}</div>
-                            </div>
-                            <div class="text-end">
-                                <div class="table-cell-secondary" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Vencimiento</div>
-                                <div class="table-cell-primary">{{ poliza.fecha_fin|date:"d M, Y" }}</div>
-                            </div>
-                        </div>
-
-                        <hr style="margin: 16px 0; border-color: var(--gray-100);">
-
-                        <!-- Footer -->
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                {% if poliza.poliza_pdf %}
-                                <a href="{{ poliza.poliza_pdf.url }}" target="_blank" style="font-size: 13px; color: var(--color-danger);">
-                                    <i class="fas fa-file-pdf"></i>
-                                    Ver documento
-                                </a>
-                                {% else %}
-                                <span class="text-muted" style="font-size: 13px;">Sin documento</span>
-                                {% endif %}
-                            </div>
-                            <div class="btn-group">
-                                {% if poliza.estado == 'ACTIVA' %}
-                                <a href="{% url 'dashboard_admin:editar_poliza' pk=poliza.pk %}" class="btn btn-secondary btn-sm" title="Editar">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="{% url 'dashboard_admin:cancelar_poliza' pk=poliza.pk %}" class="btn btn-danger btn-sm" title="Cancelar">
-                                    <i class="fas fa-ban"></i>
-                                </a>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
+<!-- KPI Strip -->
+<div class="kpi-strip">
+    <div class="kpi-card">
+        <div class="kpi-icon bg-primary-soft"><i class="fas fa-file-contract"></i></div>
+        <div>
+            <div class="kpi-value">{{ total_polizas }}</div>
+            <div class="kpi-label">Total pólizas</div>
         </div>
-        {% else %}
-        <div class="empty-state">
-            <div class="empty-state-icon">
-                <i class="fas fa-file-contract"></i>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon bg-success-soft"><i class="fas fa-shield-alt"></i></div>
+        <div>
+            <div class="kpi-value">{{ total_activas }}</div>
+            <div class="kpi-label">Activas</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon bg-warning-soft"><i class="fas fa-clock"></i></div>
+        <div>
+            <div class="kpi-value">{{ total_por_vencer }}</div>
+            <div class="kpi-label">Vencen ≤ 30 días</div>
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-icon bg-info-soft"><i class="fas fa-dollar-sign"></i></div>
+        <div>
+            <div class="kpi-value" style="font-size: 18px;">${{ valor_total_activas|floatformat:0|intcomma }}</div>
+            <div class="kpi-label">Valor activas (c/IVA)</div>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+{% if polizas %}
+<div class="filter-tabs" id="filter-tabs">
+    <button type="button" class="filter-tab active" data-filter="all">
+        Todas <span class="count">{{ total_polizas }}</span>
+    </button>
+    <button type="button" class="filter-tab" data-filter="ACTIVA">
+        <i class="fas fa-circle" style="font-size: 8px; color: #10b981;"></i>
+        Activas <span class="count">{{ total_activas }}</span>
+    </button>
+    <button type="button" class="filter-tab" data-filter="por-vencer">
+        <i class="fas fa-circle" style="font-size: 8px; color: #f59e0b;"></i>
+        Vencen pronto <span class="count">{{ total_por_vencer }}</span>
+    </button>
+    <button type="button" class="filter-tab" data-filter="VENCIDA">
+        <i class="fas fa-circle" style="font-size: 8px; color: #ef4444;"></i>
+        Vencidas <span class="count">{{ total_vencidas }}</span>
+    </button>
+    <button type="button" class="filter-tab" data-filter="CANCELADA">
+        <i class="fas fa-circle" style="font-size: 8px; color: #9ca3af;"></i>
+        Canceladas <span class="count">{{ total_canceladas }}</span>
+    </button>
+</div>
+{% endif %}
+
+<!-- Grid de Pólizas -->
+{% if polizas %}
+<div class="policies-grid" id="policies-grid">
+    {% for poliza in polizas %}
+    {% with por_vencer=poliza.estado|stringformat:"s" %}
+    <div class="policy-card estado-{{ poliza.estado }} {% if poliza.estado == 'ACTIVA' and poliza.fecha_fin >= hoy and poliza.fecha_fin <= limite_30d %}por-vencer{% endif %}"
+         data-estado="{{ poliza.estado }}"
+         data-por-vencer="{% if poliza.estado == 'ACTIVA' and poliza.fecha_fin >= hoy and poliza.fecha_fin <= limite_30d %}1{% else %}0{% endif %}">
+        <div class="accent-bar"></div>
+
+        <!-- Header: tipo + estado -->
+        <div class="policy-head">
+            <div>
+                <div class="policy-tipo">{{ poliza.tipo_seguro.nombre }}</div>
+                <div class="policy-numero">#{{ poliza.numero_poliza }}</div>
             </div>
+            <div class="d-flex flex-column align-items-end gap-1">
+                {% if poliza.estado == 'ACTIVA' %}
+                    {% if poliza.fecha_fin >= hoy and poliza.fecha_fin <= limite_30d %}
+                        <span class="badge-soft por-vencer">
+                            <i class="fas fa-clock"></i>
+                            Vence en {{ poliza.fecha_fin|timeuntil }}
+                        </span>
+                    {% else %}
+                        <span class="badge-soft activa">Activa</span>
+                    {% endif %}
+                {% elif poliza.estado == 'VENCIDA' %}
+                    <span class="badge-soft vencida">Vencida</span>
+                {% elif poliza.estado == 'CANCELADA' %}
+                    <span class="badge-soft cancelada">Cancelada</span>
+                {% endif %}
+
+                {% if poliza.modo_pago == 'MENSUAL' and poliza.estado == 'ACTIVA' %}
+                    {% if poliza.estado_cartera == 'EN_MORA' %}
+                        <span class="badge-soft cartera-mora"><i class="fas fa-exclamation-triangle"></i> En mora</span>
+                    {% elif poliza.estado_cartera == 'PAGO_COMPLETO' %}
+                        <span class="badge-soft cartera-completo"><i class="fas fa-check-circle"></i> Pago completo</span>
+                    {% else %}
+                        <span class="badge-soft cartera-aldia"><i class="fas fa-check"></i> Al día</span>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="policy-divider"></div>
+
+        <!-- Info compañía y modo pago -->
+        <div class="policy-row">
+            <span class="label"><i class="fas fa-building"></i> Compañía</span>
+            <span class="value">{{ poliza.compania_aseguradora.nombre|default:"—" }}</span>
+        </div>
+        <div class="policy-row">
+            <span class="label"><i class="fas fa-credit-card"></i> Modalidad</span>
+            <span class="value">{{ poliza.get_modo_pago_display }}{% if poliza.modo_pago == 'MENSUAL' %} · {{ poliza.plazo_meses }}m{% endif %}</span>
+        </div>
+        {% if poliza.asesor %}
+        <div class="policy-row">
+            <span class="label"><i class="fas fa-user-tie"></i> Asesor</span>
+            <span class="value">{{ poliza.asesor.nombre_completo }}</span>
+        </div>
+        {% endif %}
+        {% if poliza.vehiculo %}
+        <div class="policy-row">
+            <span class="label"><i class="fas fa-car"></i> Vehículo</span>
+            <span class="value">{{ poliza.vehiculo.placa }}</span>
+        </div>
+        {% endif %}
+
+        <!-- Monto -->
+        <div class="policy-amount">
+            <div>
+                <div class="label">Prima c/IVA</div>
+            </div>
+            <div class="value">${{ poliza.valor_total_a_pagar|floatformat:0|intcomma }}</div>
+        </div>
+
+        <!-- Fechas -->
+        <div class="policy-row">
+            <span class="label"><i class="fas fa-play"></i> Inicio</span>
+            <span class="value">{{ poliza.fecha_inicio|date:"d M, Y" }}</span>
+        </div>
+        <div class="policy-row">
+            <span class="label"><i class="fas fa-flag-checkered"></i> Fin</span>
+            <span class="value">{{ poliza.fecha_fin|date:"d M, Y" }}</span>
+        </div>
+
+        {% if poliza.estado == 'CANCELADA' and poliza.monto_devolucion %}
+        <div class="policy-divider"></div>
+        <div class="alert alert-info" style="margin: 0; padding: 10px 12px; font-size: 12.5px;">
+            <i class="fas fa-info-circle"></i>
+            Devolución: <strong>${{ poliza.monto_devolucion|floatformat:0|intcomma }}</strong>
+        </div>
+        {% endif %}
+
+        <!-- Footer: acciones -->
+        <div class="policy-footer">
+            <div>
+                {% if poliza.poliza_pdf %}
+                <a href="{{ poliza.poliza_pdf.url }}" target="_blank" style="font-size: 12.5px; color: #dc2626; text-decoration: none; font-weight: 500;">
+                    <i class="fas fa-file-pdf"></i> Ver PDF
+                </a>
+                {% else %}
+                <span class="text-muted" style="font-size: 12.5px;"><i class="fas fa-file"></i> Sin documento</span>
+                {% endif %}
+            </div>
+            <div class="icon-btn-group">
+                {% if poliza.modo_pago == 'MENSUAL' %}
+                <a href="{% url 'dashboard_admin:detalle_cartera_poliza' pk=poliza.pk %}" class="icon-btn" title="Ver cartera">
+                    <i class="fas fa-wallet"></i>
+                </a>
+                {% endif %}
+                {% if poliza.estado == 'ACTIVA' %}
+                <a href="{% url 'dashboard_admin:editar_poliza' pk=poliza.pk %}" class="icon-btn" title="Editar">
+                    <i class="fas fa-edit"></i>
+                </a>
+                <a href="{% url 'dashboard_admin:cancelar_poliza' pk=poliza.pk %}" class="icon-btn danger" title="Cancelar">
+                    <i class="fas fa-ban"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endwith %}
+    {% endfor %}
+</div>
+
+<div class="empty-policies" id="empty-filter" style="display: none;">
+    <i class="fas fa-filter"></i>
+    <div style="font-size: 16px; font-weight: 500; color: var(--gray-700, #374151); margin-bottom: 6px;">Sin resultados</div>
+    <div>No hay pólizas que coincidan con el filtro seleccionado.</div>
+</div>
+
+{% else %}
+<div class="card">
+    <div class="card-body">
+        <div class="empty-state">
+            <div class="empty-state-icon"><i class="fas fa-file-contract"></i></div>
             <div class="empty-state-title">Sin pólizas registradas</div>
             <div class="empty-state-description">Este cliente no tiene pólizas registradas en el sistema.</div>
             <a href="{% url 'dashboard_admin:crear_poliza_cliente' pk=cliente.pk %}" class="btn btn-primary">
-                <i class="fas fa-plus"></i>
-                Agregar Póliza
+                <i class="fas fa-plus"></i> Agregar Póliza
             </a>
         </div>
-        {% endif %}
     </div>
 </div>
+{% endif %}
+
+<script>
+(function() {
+    const tabs = document.querySelectorAll('#filter-tabs .filter-tab');
+    const cards = document.querySelectorAll('#policies-grid .policy-card');
+    const emptyFilter = document.getElementById('empty-filter');
+    const grid = document.getElementById('policies-grid');
+
+    if (!tabs.length) return;
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const filter = tab.dataset.filter;
+            let visibles = 0;
+
+            cards.forEach(card => {
+                let show = false;
+                if (filter === 'all') {
+                    show = true;
+                } else if (filter === 'por-vencer') {
+                    show = card.dataset.porVencer === '1';
+                } else {
+                    show = card.dataset.estado === filter;
+                }
+                card.style.display = show ? '' : 'none';
+                if (show) visibles++;
+            });
+
+            if (emptyFilter && grid) {
+                emptyFilter.style.display = visibles === 0 ? 'block' : 'none';
+                grid.style.display = visibles === 0 ? 'none' : 'grid';
+            }
+        });
+    });
+})();
+</script>
 {% endblock %}
