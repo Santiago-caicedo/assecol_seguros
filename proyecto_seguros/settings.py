@@ -228,6 +228,11 @@ ADMIN_EMAIL = os.environ.get('EMAIL_ADMIN_NOTIFICACIONES')
 
 
 # --- CONFIGURACIÓN DE LOGGING ---
+# Nos aseguramos de que la carpeta de logs exista en cualquier entorno
+# (dev, producción, clon nuevo o CI) para que los handlers de archivo no fallen.
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -251,18 +256,20 @@ LOGGING = {
         'file': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'assecol.log',
+            'filename': LOGS_DIR / 'assecol.log',
             'maxBytes': 1024 * 1024 * 5,  # 5 MB
             'backupCount': 5,
             'formatter': 'verbose',
+            'delay': True,
         },
         'error_file': {
             'level': 'ERROR',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'errors.log',
+            'filename': LOGS_DIR / 'errors.log',
             'maxBytes': 1024 * 1024 * 5,  # 5 MB
             'backupCount': 5,
             'formatter': 'verbose',
+            'delay': True,
         },
     },
     'loggers': {
