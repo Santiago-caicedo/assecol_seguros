@@ -10,7 +10,8 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(git fetch *)",
-      "Bash(grep -E \"\\(urls|views|forms\\)\\\\.py$\")"
+      "Bash(grep -E \"\\(urls|views|forms\\)\\\\.py$\")",
+      "Bash(command -v python3)"
     ]
   }
 }

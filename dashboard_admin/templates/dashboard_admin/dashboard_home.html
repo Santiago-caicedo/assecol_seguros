@@ -74,7 +74,67 @@
             <a href="{% url 'dashboard_admin:lista_vehiculos' %}">Ver vehículos <i class="fas fa-arrow-right ms-1"></i></a>
         </div>
     </div>
+
+    <!-- Pendiente Modalidad de Pago -->
+    <div class="stat-card stat-warning">
+        <div class="stat-header">
+            <div class="stat-icon icon-warning">
+                <i class="fas fa-clock"></i>
+            </div>
+            {% if lista_polizas_pendientes_modalidad|length > 0 %}
+            <span class="stat-trend trend-down">
+                <i class="fas fa-exclamation-circle"></i>
+                Definir
+            </span>
+            {% endif %}
+        </div>
+        <div class="stat-value">{{ lista_polizas_pendientes_modalidad|length|default:0 }}</div>
+        <div class="stat-label">Pendiente modalidad de pago</div>
+        <div class="stat-footer">
+            Falta definir cómo se paga
+        </div>
+    </div>
 </div>
+
+<!-- Recordatorio: Pólizas pendientes por definir modalidad de pago -->
+{% if lista_polizas_pendientes_modalidad %}
+<div class="card mt-4" style="border: 1px solid #fcd34d; background: #fffbeb;">
+    <div class="card-header" style="background: #fef3c7; border-bottom: 1px solid #fcd34d;">
+        <h3 class="card-title" style="color: #92400e;">
+            <i class="fas fa-clock"></i>
+            Pendientes por definir modalidad de pago
+        </h3>
+        <span class="badge" style="background: #f59e0b; color: #fff;">{{ lista_polizas_pendientes_modalidad|length }}</span>
+    </div>
+    <div class="card-body p-0">
+        <ul class="alert-list" style="padding: 0 28px;">
+            {% for poliza in lista_polizas_pendientes_modalidad|slice:":8" %}
+            <li class="alert-item">
+                <div class="alert-icon" style="background: #fef3c7; color: #b45309;">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <div class="alert-content">
+                    <div class="alert-title">{{ poliza.tipo_seguro.nombre }} &middot; #{{ poliza.numero_poliza }}</div>
+                    <div class="alert-description">
+                        {{ poliza.cliente.get_full_name|default:poliza.cliente.username }} &middot; falta definir cómo se paga
+                    </div>
+                </div>
+                <div class="alert-time">
+                    <a href="{% url 'dashboard_admin:editar_poliza' pk=poliza.pk %}" class="btn btn-sm" style="background: #f59e0b; color: #fff; font-weight: 600;">
+                        <i class="fas fa-edit"></i> Definir
+                    </a>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% if lista_polizas_pendientes_modalidad|length > 8 %}
+        <div style="padding: 16px 28px; border-top: 1px solid #fde68a; color: #92400e; font-size: 13.5px;">
+            Y {{ lista_polizas_pendientes_modalidad|length|add:"-8" }} póliza(s) más pendientes por definir.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
 
 <!-- Alerts Section -->
 <div class="row g-4">

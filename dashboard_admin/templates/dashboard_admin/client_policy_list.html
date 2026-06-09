@@ -141,6 +141,30 @@
     .policy-card.estado-CANCELADA .accent-bar { background: #9ca3af; }
     .policy-card.por-vencer .accent-bar { background: linear-gradient(90deg, #10b981 0%, #f59e0b 100%); }
 
+    /* Póliza con modalidad de pago pendiente por definir */
+    .policy-card.pendiente-modalidad {
+        background: #fffbeb;
+        border-color: #fcd34d;
+        box-shadow: 0 0 0 1px #fcd34d inset;
+    }
+    .policy-card.pendiente-modalidad .accent-bar { background: #f59e0b; }
+    .policy-card.pendiente-modalidad:hover { border-color: #f59e0b; }
+    .pendiente-banner {
+        background: #fef3c7;
+        border: 1px solid #fcd34d;
+        color: #92400e;
+        border-radius: 8px;
+        padding: 9px 12px;
+        font-size: 12.5px;
+        font-weight: 600;
+        margin: 10px 0 2px;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+    }
+    .badge-soft.pendiente { background: #fef3c7; color: #92400e; }
+    .filter-tab .count.warn { background: #f59e0b; color: #fff; }
+
     .policy-head { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 4px; }
     .policy-tipo {
         font-size: 16px;
@@ -300,6 +324,12 @@
         <i class="fas fa-circle" style="font-size: 8px; color: #10b981;"></i>
         Activas <span class="count">{{ total_activas }}</span>
     </button>
+    {% if total_pendientes_modalidad > 0 %}
+    <button type="button" class="filter-tab" data-filter="pendiente-modalidad">
+        <i class="fas fa-clock" style="font-size: 9px; color: #f59e0b;"></i>
+        Pendiente modalidad <span class="count warn">{{ total_pendientes_modalidad }}</span>
+    </button>
+    {% endif %}
     <button type="button" class="filter-tab" data-filter="por-vencer">
         <i class="fas fa-circle" style="font-size: 8px; color: #f59e0b;"></i>
         Vencen pronto <span class="count">{{ total_por_vencer }}</span>
@@ -320,9 +350,10 @@
 <div class="policies-grid" id="policies-grid">
     {% for poliza in polizas %}
     {% with por_vencer=poliza.estado|stringformat:"s" %}
-    <div class="policy-card estado-{{ poliza.estado }} {% if poliza.estado == 'ACTIVA' and poliza.fecha_fin >= hoy and poliza.fecha_fin <= limite_30d %}por-vencer{% endif %}"
+    <div class="policy-card estado-{{ poliza.estado }} {% if poliza.estado == 'ACTIVA' and poliza.modo_pago == 'PENDIENTE' %}pendiente-modalidad{% endif %} {% if poliza.estado == 'ACTIVA' and poliza.fecha_fin >= hoy and poliza.fecha_fin <= limite_30d %}por-vencer{% endif %}"
          data-estado="{{ poliza.estado }}"
-         data-por-vencer="{% if poliza.estado == 'ACTIVA' and poliza.fecha_fin >= hoy and poliza.fecha_fin <= limite_30d %}1{% else %}0{% endif %}">
+         data-por-vencer="{% if poliza.estado == 'ACTIVA' and poliza.fecha_fin >= hoy and poliza.fecha_fin <= limite_30d %}1{% else %}0{% endif %}"
+         data-pendiente-modalidad="{% if poliza.estado == 'ACTIVA' and poliza.modo_pago == 'PENDIENTE' %}1{% else %}0{% endif %}">
         <div class="accent-bar"></div>
 
         <!-- Header: tipo + estado -->
@@ -333,7 +364,12 @@
             </div>
             <div class="d-flex flex-column align-items-end gap-1">
                 {% if poliza.estado == 'ACTIVA' %}
-                    {% if poliza.fecha_fin >= hoy and poliza.fecha_fin <= limite_30d %}
+                    {% if poliza.modo_pago == 'PENDIENTE' %}
+                        <span class="badge-soft pendiente">
+                            <i class="fas fa-clock"></i>
+                            Pendiente modalidad
+                        </span>
+                    {% elif poliza.fecha_fin >= hoy and poliza.fecha_fin <= limite_30d %}
                         <span class="badge-soft por-vencer">
                             <i class="fas fa-clock"></i>
                             Vence en {{ poliza.fecha_fin|timeuntil }}
@@ -358,6 +394,13 @@
                 {% endif %}
             </div>
         </div>
+
+        {% if poliza.estado == 'ACTIVA' and poliza.modo_pago == 'PENDIENTE' %}
+        <div class="pendiente-banner">
+            <i class="fas fa-exclamation-circle"></i>
+            Pendiente por definir modalidad de pago
+        </div>
+        {% endif %}
 
         <div class="policy-divider"></div>
 
@@ -484,6 +527,8 @@
                     show = true;
                 } else if (filter === 'por-vencer') {
                     show = card.dataset.porVencer === '1';
+                } else if (filter === 'pendiente-modalidad') {
+                    show = card.dataset.pendienteModalidad === '1';
                 } else {
                     show = card.dataset.estado === filter;
                 }

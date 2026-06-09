@@ -57,6 +57,7 @@ class Asesor(models.Model):
 class Poliza(models.Model):
     # --- Opciones para los campos 'choices' ---
     MODO_PAGO_CHOICES = [
+        ('PENDIENTE', 'Pendiente por definir'),
         ('CONTADO', 'De Contado'),
         ('CREDITO', 'A Crédito'),
         ('MENSUAL', 'Pago Mensual'),
@@ -122,6 +123,11 @@ class Poliza(models.Model):
 
     def __str__(self):
         return f"Póliza {self.numero_poliza} - {self.cliente.username}"
+
+    @property
+    def modalidad_pendiente(self):
+        """True si la póliza está activa pero aún no se ha definido la modalidad de pago."""
+        return self.modo_pago == 'PENDIENTE' and self.estado == 'ACTIVA'
 
     @property
     def valor_iva(self):

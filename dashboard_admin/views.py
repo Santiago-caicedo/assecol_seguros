@@ -88,6 +88,12 @@ def dashboard_home_view(request):
     # El KPI de "Pólizas por Vencer" ahora puede usar el count de esta consulta
     polizas_por_vencer_count = polizas_a_vencer.count()
 
+    # 3. Pólizas con modalidad de pago pendiente por definir
+    polizas_pendientes_modalidad = Poliza.objects.filter(
+        estado='ACTIVA',
+        modo_pago='PENDIENTE'
+    ).select_related('cliente', 'tipo_seguro').order_by('fecha_inicio')
+
     context = {
         'total_clientes': total_clientes,
         'total_polizas_activas': total_polizas_activas,
@@ -96,6 +102,7 @@ def dashboard_home_view(request):
         # 👇 AÑADIMOS LAS NUEVAS LISTAS AL CONTEXTO 👇
         'lista_polizas_a_vencer': polizas_a_vencer,
         'lista_soats_a_vencer': soats_a_vencer,
+        'lista_polizas_pendientes_modalidad': polizas_pendientes_modalidad,
     }
     return render(request, 'dashboard_admin/dashboard_home.html', context)
 
@@ -178,6 +185,7 @@ class ClientPolicyListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         vencidas = [p for p in polizas if p.estado == 'VENCIDA']
         canceladas = [p for p in polizas if p.estado == 'CANCELADA']
         por_vencer = [p for p in activas if hoy <= p.fecha_fin <= limite_30d]
+        pendientes_modalidad = [p for p in activas if p.modo_pago == 'PENDIENTE']
 
         valor_total_activas = sum((p.valor_total_a_pagar for p in activas), Decimal('0'))
 
@@ -188,6 +196,7 @@ class ClientPolicyListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
             'total_vencidas': len(vencidas),
             'total_canceladas': len(canceladas),
             'total_por_vencer': len(por_vencer),
+            'total_pendientes_modalidad': len(pendientes_modalidad),
             'valor_total_activas': valor_total_activas,
             'hoy': hoy,
             'limite_30d': limite_30d,
